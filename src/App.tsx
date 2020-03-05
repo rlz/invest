@@ -1,12 +1,12 @@
 import React from 'react';
 import { Operation } from './api/common';
-import { FigiMap, loadInstruments } from './api/instruments';
+import { InstrumentsMap, loadInstruments } from './api/instruments';
 import { loadOps } from './api/operations';
 import './App.css';
-import { Stats } from './stats/stats';
+import { DayStats, Stats } from './stats/stats';
 
 interface State {
-  instrumentsMap?: FigiMap;
+  instrumentsMap?: InstrumentsMap;
   ops?: Operation[];
 }
 
@@ -26,19 +26,20 @@ class App extends React.Component<{}, State> {
     return (
       <div className='cApp'>
         {this.renderInstruments()}
-        {this.renderOps()}
+        {this.renderDays()}
+        {/* {this.renderOps()} */}
       </div>
     );
   }
 
   renderInstruments (): JSX.Element | undefined {
-    const { instrumentsMap: figiMap, ops } = this.state;
+    const { instrumentsMap, ops } = this.state;
 
-    if (!figiMap || !ops) {
+    if (!instrumentsMap || !ops) {
       return;
     }
 
-    const stats = new Stats(figiMap, ops);
+    const stats = new Stats(instrumentsMap, ops);
     const quantities = stats.apply(new Date());
 
     return (
@@ -49,16 +50,28 @@ class App extends React.Component<{}, State> {
     );
   }
 
-  renderOps (): JSX.Element | undefined {
-    const ops = this.state.ops;
+  renderDays (): JSX.Element | undefined {
+    const { instrumentsMap, ops } = this.state;
 
-    if (ops === undefined) {
+    if (!instrumentsMap || !ops) {
       return;
     }
 
+    const stats = new Stats(instrumentsMap, ops);
+    const dayStats = stats.days();
+
     return (
-      <div className='cApp-ops'>
-        {ops.map((o, i) => <div key={i}><pre>{JSON.stringify(o, undefined, 2)}</pre></div>)}
+      <div>
+        {dayStats.map(s => this.renderDayStats(s))}
+      </div>
+    );
+  }
+
+  renderDayStats (dayStats: DayStats): JSX.Element {
+    return (
+      <div>
+        <div>{dayStats.date.toDateString()} | RUB: {dayStats.rub}, USD: {dayStats.usd}, EUR: {dayStats.eur}</div>
+        <div>{dayStats.ops.map((op, i) => <div key={i}>{JSON.stringify(op)}</div>)}</div>
       </div>
     );
   }
