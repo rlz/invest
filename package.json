@@ -8,11 +8,14 @@
     "react-scripts": "3.4.0"
   },
   "devDependencies": {
-    "typescript": "^3.7.5",
-    "@types/node": "^12.12.29",
+    "@testing-library/jest-dom": "^5.1.1",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.0",
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",
-    "eslint-config-standard-react": "9.2.0"
+    "eslint-config-standard-react": "9.2.0",
+    "node-sass": "^4.13.1",
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "start": "react-scripts start",

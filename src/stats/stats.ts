@@ -2,41 +2,55 @@ import { Operation } from '../api/common';
 import { Instrument, InstrumentsMap } from '../api/instruments';
 
 const NoFigiOps = new Set(["PayIn", "Tax", "TaxBack", "PayOut"]);
-const EUR_FIGI = "BBG0013HJJ31";
-const USD_FIGI = "BBG0013HGFT4";
+export const EUR_FIGI = "BBG0013HJJ31";
+export const USD_FIGI = "BBG0013HGFT4";
 const CURRENCY_TO_FIGI = {
   "RUB": "rub",
   "EUR": EUR_FIGI,
   "USD": USD_FIGI
 };
 
+export interface InstrumentState {
+  figi: string;
+  amount: number;
+  cost: number;
+}
 
 export interface DayStats {
   date: Date;
 
+  // what in pocket on the date
   rub: number;
   usd: number;
   eur: number;
   portfolio: {
-    [figi: string]: number;
+    [figi: string]: InstrumentState;
   };
 
+  // market cost
   usdCost: number;
   eurCost: number;
 
-  instrumentsCosts: {
-    [figi: string]: number;
-  };
-
-  inRub: number;
-  inUsd: number;
-  inEur: number;
-
-  outRub: number;
-  outUsd: number;
-  outEur: number;
+  // in/out ops all time
+  ownRub: number;
+  ownUsd: number;
+  ownEur: number;
 
   ops: Operation[];
+}
+
+interface Portfolio {
+  rub: number;
+  usd: number;
+  eur: number;
+
+  ownRub: number;
+  ownUsd: number;
+  ownEur: number;
+
+  instruments: {
+    [figi: string]: InstrumentState;
+  };
 }
 
 function startDay (date: Date): Date {
@@ -88,39 +102,24 @@ export class Stats {
     return [...figi.values()];
   }
 
-  days (): DayStats[] {
+  timeline (): DayStats[] {
     const dayStats: DayStats[] = [];
 
-    const stats: DayStats = {
-      date: new Date(),
-
+    const stats: Omit<DayStats, "date" | "portfolio" | "instrumentsCosts" | "ops"> = {
       rub: 0,
       usd: 0,
       eur: 0,
-      portfolio: {
-      },
 
       usdCost: 0,
       eurCost: 0,
 
-      instrumentsCosts: {},
-
-      inRub: 0,
-      inUsd: 0,
-      inEur: 0,
-
-      outRub: 0,
-      outUsd: 0,
-      outEur: 0,
-
-      ops: []
+      ownRub: 0,
+      ownUsd: 0,
+      ownEur: 0,
     };
 
     const portfolio: {
-      [figi: string]: number;
-    } = {};
-    const instrumentsCost: {
-      [figi: string]: number;
+      [figi: string]: InstrumentState;
     } = {};
 
     let opIndex = 0;
@@ -157,9 +156,13 @@ export class Stats {
           } else if (figi === EUR_FIGI) {
             stats.eur += quantity;
           } else if (portfolio[figi] === undefined) {
-            portfolio[figi] = quantity;
+            portfolio[figi] = {
+              figi,
+              amount: quantity,
+              cost: -1
+            };
           } else {
-            portfolio[figi] += quantity;
+            portfolio[figi].amount += quantity;
           }
         }
 
@@ -173,7 +176,17 @@ export class Stats {
           } else if (figi === EUR_FIGI) {
             stats.eur -= quantity;
           } else {
-            portfolio[figi] -= quantity;
+            portfolio[figi].amount -= quantity;
+          }
+        }
+
+        if (op.operationType === "PayIn" || op.operationType === "PayOut") {
+          if (op.currency === "RUB") {
+            stats.ownRub += op.payment;
+          } else if (op.currency === "USD") {
+            stats.ownUsd += op.payment;
+          } else {
+            stats.ownEur += op.payment;
           }
         }
 
@@ -183,8 +196,7 @@ export class Stats {
       dayStats.push({
         ...stats,
         date: d,
-        portfolio: { ...portfolio },
-        instrumentsCosts: { ...instrumentsCost },
+        portfolio,
         ops
       });
     }
@@ -192,7 +204,7 @@ export class Stats {
     return dayStats;
   }
 
-  apply (date: Date): { [figi: string]: number } {
+  portfolio (): { [figi: string]: number } {
     const result: {
       [figi: string]: number;
       rub: number;
@@ -203,10 +215,6 @@ export class Stats {
     result[EUR_FIGI] = 0;
 
     for (const op of this.ops) {
-      if (new Date(op.date) > date) {
-        break;
-      }
-
       if (op.status !== "Done") {
         continue;
       }

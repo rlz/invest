@@ -1,0 +1,9 @@
+.cApp {
+  .cApp-ops {
+    display: none;
+
+    &.expanded {
+      display: block;
+    }
+  }
+}
