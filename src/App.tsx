@@ -4,12 +4,15 @@ import { Operation } from './api/common';
 import { InstrumentsMap, loadInstruments } from './api/instruments';
 import { loadOps } from './api/operations';
 import './App.scss';
-import { DayStats, Stats } from './stats/stats';
+import { InstrumentState } from './stats/instrumentState';
+import { DayStats, EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
+import { Cur, Eur, Rub, Usd } from './widgets/spans';
+import { Tabs } from './widgets/tabs';
 
 interface State {
   instrumentsMap?: InstrumentsMap;
   ops?: Operation[];
-  candles?: Map<string, Candle[]>;
+  candles?: { [figi: string]: Candle[] };
 
   expandedDays: ReadonlySet<string>;
 }
@@ -25,56 +28,140 @@ class App extends React.Component<{}, State> {
   async componentDidMount (): Promise<void> {
     const instrumentsMap = await loadInstruments();
     const ops = await loadOps();
-    const stats = new Stats(instrumentsMap, ops);
-    const candles = new Map<string, Candle[]>();
+    const stats = new Stats(instrumentsMap, ops, {});
+    const candles: { [figi: string]: Candle[] } = {};
     const cPromises: Promise<void>[] = [];
+
     for (const i of stats.allInstruments()) {
+      if (i.figi === USD_FIGI || i.figi === EUR_FIGI) continue;
+
       cPromises.push((async (): Promise<void> => {
         const c = await loadCandles(i.figi, new Date(ops[0].date));
-        candles.set(i.figi, c);
+        candles[i.figi] = c;
       })());
     }
+
+    cPromises.push((async (): Promise<void> => {
+      const c = await loadCandles(USD_FIGI, new Date(ops[0].date));
+      candles[USD_FIGI] = c;
+    })());
+
+    cPromises.push((async (): Promise<void> => {
+      const c = await loadCandles(EUR_FIGI, new Date(ops[0].date));
+      candles[EUR_FIGI] = c;
+    })());
+
     await Promise.all(cPromises);
+
     this.setState({ instrumentsMap, ops, candles });
-    console.log(candles);
   }
 
   render (): JSX.Element {
+    const { instrumentsMap, ops, candles } = this.state;
+
+    if (!instrumentsMap || !ops || !candles) {
+      return (
+        <div className='cApp'>
+          <Tabs activeTab={0} onTabClick={(): void => { return; }} />
+          <div className='cApp-body' />
+        </div>
+      );
+    }
+
+    const stats = new Stats(instrumentsMap, ops, candles);
+    const portfolio = stats.portfolio();
+
     return (
       <div className='cApp'>
-        {this.renderInstruments()}
-        {this.renderDays()}
-        {/* {this.renderOps()} */}
+        <Tabs activeTab={0} onTabClick={(): void => { return; }} />
+        <div className='cApp-body'>
+          <h1>Полная стоимость портфеля</h1>
+          <div className='cApp-full-cost'>
+            <Rub v={-1} />
+            <Usd v={-1} />
+            <Eur v={-1} />
+          </div>
+          <div className='cApp-own cApp-row'>
+            <div>
+              <h2>Собственные средства</h2>
+              <div>
+                <Rub v={portfolio.ownRub} /> <Usd v={portfolio.ownUsd} /> <Eur v={portfolio.ownEur} />
+              </div>
+            </div>
+            <div>
+              <h2>Итого</h2>
+              <div>
+                <Rub v={portfolio.totalOwnRub()} />{' '}
+                <Usd v={portfolio.totalOwnUsd()} />{' '}
+                <Eur v={portfolio.totalOwnEur()} />
+              </div>
+            </div>
+          </div>
+          <div className='cApp-avail cApp-row'>
+            <div>
+              <h2>Доступно</h2>
+              <div>
+                <Rub v={portfolio.rub} /> <Usd v={portfolio.usd} /> <Eur v={portfolio.eur} />
+              </div>
+            </div>
+            <div>
+              <h2>Итого</h2>
+              <div>
+                <Rub v={portfolio.totalRub()} /> <Usd v={portfolio.totalUsd()} /> <Eur v={portfolio.totalEur()} />
+              </div>
+            </div>
+          </div>
+          <div className='cApp-inst'>
+            <h2>Инструменты</h2>
+            {this.renderPortfolio()}
+          </div>
+          {/* {this.renderDays()} */}
+          {/* {this.renderOps()} */}
+        </div>
       </div>
     );
   }
 
-  renderInstruments (): JSX.Element | undefined {
-    const { instrumentsMap, ops } = this.state;
+  renderPortfolio (): JSX.Element | undefined {
+    const { instrumentsMap, ops, candles } = this.state;
 
-    if (!instrumentsMap || !ops) {
+    if (!instrumentsMap || !ops || !candles) {
       return;
     }
 
-    const stats = new Stats(instrumentsMap, ops);
-    const quantities = stats.portfolio();
+    const stats = new Stats(instrumentsMap, ops, candles);
+    const portfolio = stats.portfolio();
 
     return (
-      <div className='cApp-instruments'>
-        RUB: {quantities.rub}
-        {stats.allInstruments().map(i => <div key={i.figi}>{i.name}, {i.figi}, {quantities[i.figi]}</div>)}
+      <div className='cApp-portfolio'>
+        {Object.values(portfolio.instruments).map(i => this.renderInstrument(i))}
+      </div>
+    );
+  }
+
+  renderInstrument (i: InstrumentState): JSX.Element | undefined {
+    const { instrumentsMap } = this.state;
+
+    if (!instrumentsMap) {
+      return;
+    }
+    const name = instrumentsMap[i.figi]?.name;
+    return (
+      <div key={i.figi}>
+        {name} <Cur t={i.currency} v={i.amount * i.cost} />{' '}
+        ({i.amount}{'\xD7'}<Cur t={i.currency} v={i.cost} />)
       </div>
     );
   }
 
   renderDays (): JSX.Element | undefined {
-    const { instrumentsMap, ops } = this.state;
+    const { instrumentsMap, ops, candles } = this.state;
 
-    if (!instrumentsMap || !ops) {
+    if (!instrumentsMap || !ops || !candles) {
       return;
     }
 
-    const stats = new Stats(instrumentsMap, ops);
+    const stats = new Stats(instrumentsMap, ops, candles);
     const dayStats = stats.timeline();
 
     return (

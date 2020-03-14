@@ -57,3 +57,11 @@ export function findPrice (candles: Candle[], date: Date): number | undefined {
   }
   return candles[index].c;
 }
+
+export function lastPrice (candles: Candle[]): number {
+  if (candles.length === 0) {
+    throw Error("No candles");
+  }
+
+  return candles[candles.length - 1].c;
+}

@@ -1,9 +1,50 @@
 .cApp {
-  .cApp-ops {
-    display: none;
+  .cApp-body {
+    padding: 0 0.7rem 0.7rem 0.7rem;
 
-    &.expanded {
-      display: block;
+    h1 {
+      font-size: 0.8rem;
+      color: #707070;
+      font-weight: normal;
+      text-align: center;
+      margin: 0.9rem 0 0.3rem 0;
+    }
+
+    h2 {
+      font-size: 0.8rem;
+      color: #707070;
+      font-weight: normal;
+      margin: 0.9rem 0 0.3rem 0;
+    }
+
+    .cApp-full-cost {
+      display: flex;
+      justify-content: center;
+
+      span {
+        padding: 0 1rem;
+        font-size: 2rem;
+      }
+    }
+
+    .cApp-row {
+      display: flex;
+
+      * {
+        width: 50%;
+      }
+
+      span.currency {
+        margin: 0 0.5rem;
+
+        &:first-child {
+          margin-left: 0;
+        }
+
+        &:last-child {
+          margin-right: 0;
+        }
+      }
     }
   }
 }

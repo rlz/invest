@@ -1,4 +1,4 @@
-import { InstrumentType, OkResponse } from './common';
+import { Currency, InstrumentType, OkResponse } from './common';
 import { API_TOKEN } from './token';
 
 interface StocksResponse extends OkResponse {
@@ -14,7 +14,7 @@ export interface Instrument {
   isin?: string;
   minPriceIncrement?: number;
   lot?: number;
-  currency?: string;
+  currency?: Currency;
   name: string;
   type: InstrumentType;
 }
