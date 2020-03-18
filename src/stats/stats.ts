@@ -55,11 +55,11 @@ export class Stats {
     this.candles = candles;
   }
 
-  usdCost (): number {
+  usdPrice (): number {
     return lastPrice(this.candles[USD_FIGI]);
   }
 
-  eurCost (): number {
+  eurPrice (): number {
     return lastPrice(this.candles[EUR_FIGI]);
   }
 
@@ -281,8 +281,8 @@ export class Stats {
       i.cost = lastPrice(this.candles[i.figi]);
     }
 
-    result.usdCost = lastPrice(this.candles[USD_FIGI]);
-    result.eurCost = lastPrice(this.candles[EUR_FIGI]);
+    result.usdPrice = lastPrice(this.candles[USD_FIGI]);
+    result.eurPrice = lastPrice(this.candles[EUR_FIGI]);
 
     return result;
   }

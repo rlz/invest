@@ -17,6 +17,28 @@ interface State {
   expandedInstruments: ReadonlySet<string>;
 }
 
+function sortInstruments (
+  states: { [figi: string]: InstrumentState },
+  infos: InstrumentsMap,
+  usdPrice: number,
+  eurPrice: number
+): InstrumentState[] {
+  return Object.values(states)
+    .sort((a, b) => {
+      const c = (
+        Math.abs(toRub(b.currency, b.amount * b.cost, usdPrice, eurPrice))
+        - Math.abs(toRub(a.currency, a.amount * a.cost, usdPrice, eurPrice))
+      );
+      if (c !== 0) return c;
+      const aTicker = infos[a.figi]?.ticker;
+      const bTicker = infos[b.figi]?.ticker;
+      if (aTicker === undefined || bTicker === undefined) {
+        throw Error("Unknown instruments");
+      }
+      return aTicker.localeCompare(bTicker);
+    });
+}
+
 export class PortfolioBlock extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -29,22 +51,22 @@ export class PortfolioBlock extends React.Component<Props, State> {
   render (): JSX.Element {
     const { portfolio, instruments } = this.props;
 
-    const totalPortfolioCost = new CurrenciesCalc(portfolio.usdCost, portfolio.eurCost);
+    const totalPortfolioCost = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice);
     totalPortfolioCost.addRub(portfolio.totalRub());
     for (const i of Object.values(portfolio.instruments)) {
       totalPortfolioCost.add(i.currency, i.amount * i.cost);
     }
 
     return (
-      <div className=''>
+      <div className='bPortfolio'>
         <h1>Полная стоимость портфеля</h1>
-        <div className='cApp-full-cost'>
+        <div className='bPortfolio-full-cost'>
           <Rub v={totalPortfolioCost.rub()} />
           <Usd v={totalPortfolioCost.usd()} />
           <Eur v={totalPortfolioCost.eur()} />
-          <span className='cApp-pc'>{((totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub() * 100).toFixed(2)}%</span>
+          <span className='bPortfolio-pc'>{((totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub() * 100).toFixed(2)}%</span>
         </div>
-        <div className='cApp-own cApp-row'>
+        <div className='bPortfolio-own bPortfolio-row'>
           <div>
             <h2>Собственные средства</h2>
             <div>
@@ -60,7 +82,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
             </div>
           </div>
         </div>
-        <div className='cApp-avail cApp-row'>
+        <div className='bPortfolio-avail bPortfolio-row'>
           <div>
             <h2>Доступно</h2>
             <div>
@@ -74,24 +96,11 @@ export class PortfolioBlock extends React.Component<Props, State> {
             </div>
           </div>
         </div>
-        <div className='cApp-insts'>
+        <div className='bPortfolio-insts'>
           <h2>Инструменты</h2>
-          <div className='cApp-portfolio'>
-            {Object.values(portfolio.instruments)
-              .sort((a, b) => {
-                const c = (
-                  toRub(b.currency, b.amount * b.cost, portfolio.usdCost, portfolio.eurCost)
-                  - toRub(a.currency, a.amount * a.cost, portfolio.usdCost, portfolio.eurCost)
-                );
-                if (c !== 0) return c;
-                const aTicker = instruments[a.figi]?.ticker;
-                const bTicker = instruments[b.figi]?.ticker;
-                if (aTicker === undefined || bTicker === undefined) {
-                  throw Error("Unknown instruments");
-                }
-                return aTicker.localeCompare(bTicker);
-              })
-              .map(i => this.renderInstrument(i, portfolio.usdCost, portfolio.eurCost))}
+          <div className='bPortfolio-portfolio'>
+            {sortInstruments(portfolio.instruments, instruments, portfolio.usdPrice, portfolio.eurPrice)
+              .map(i => this.renderInstrument(i, portfolio.usdPrice, portfolio.eurPrice))}
           </div>
         </div>
       </div>
@@ -120,10 +129,10 @@ export class PortfolioBlock extends React.Component<Props, State> {
     effect += i.amount * i.cost;
 
     const result = [
-      <div key={i.figi} className='cApp-inst cApp-row'>
-        <div className='cApp-inst-1'>
+      <div key={i.figi} className='bPortfolio-inst bPortfolio-row'>
+        <div className='bPortfolio-inst-1'>
           <div
-            className='cApp-inst-name'
+            className='bPortfolio-inst-name'
             onClick={(): void => {
               if (this.state.expandedInstruments.has(i.figi)) {
                 const ei = new Set(this.state.expandedInstruments);
@@ -148,9 +157,9 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <Eur v={toEur(i.currency, i.cost * i.amount, usdCost, eurCost)} />
         </div>
       </div>,
-      <div key={i.figi + "-sl"} className='cApp-inst-sl cApp-row'>
-        <div className='cApp-ticker-line'>
-          <div className='cApp-ticker'>
+      <div key={i.figi + "-sl"} className='bPortfolio-inst-sl bPortfolio-row'>
+        <div className='bPortfolio-ticker-line'>
+          <div className='bPortfolio-ticker'>
             {instrumentInfo.ticker}
           </div>
           <div>
@@ -164,7 +173,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
     if (this.state.expandedInstruments.has(i.figi)) {
       const ops = i.ops.reverse();
       result.push(
-        <div className='cApp-inst-ops'>
+        <div className='bPortfolio-inst-ops'>
           {ops.map(op => this.renderOperation(i, op))}
         </div>
       );
@@ -176,7 +185,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
   renderOperation (i: InstrumentState, op: Operation): JSX.Element {
     if (op.operationType === "Buy" || op.operationType === "BuyCard") {
       return (
-        <div className='cApp-op'>
+        <div className='bPortfolio-op'>
           {DateTime.fromISO(op.date).toISODate()}{' '}
           Покупка{' '}
           {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
@@ -187,7 +196,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
 
     if (op.operationType === "Sell") {
       return (
-        <div className='cApp-op'>
+        <div className='bPortfolio-op'>
           {DateTime.fromISO(op.date).toISODate()}{' '}
           Продажа{' '}
           {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
@@ -198,7 +207,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
 
     if (op.operationType === "Dividend") {
       return (
-        <div className='cApp-op'>
+        <div className='bPortfolio-op'>
           {DateTime.fromISO(op.date).toISODate()} Dividend <Cur t={op.currency} v={op.payment} />
         </div>
       );

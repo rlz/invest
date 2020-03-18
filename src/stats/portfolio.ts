@@ -9,34 +9,34 @@ export class Portfolio {
   ownUsd = 0;
   ownEur = 0;
 
-  usdCost = 0;
-  eurCost = 0;
+  usdPrice = 0;
+  eurPrice = 0;
 
   instruments: {
     [figi: string]: InstrumentState;
   } = {};
 
   totalRub (): number {
-    return this.rub + this.usdCost * this.usd + this.eurCost * this.eur;
+    return this.rub + this.usdPrice * this.usd + this.eurPrice * this.eur;
   }
 
   totalUsd (): number {
-    return this.usd + this.rub / this.usdCost + this.eurCost * this.eur / this.usdCost;
+    return this.usd + this.rub / this.usdPrice + this.eurPrice * this.eur / this.usdPrice;
   }
 
   totalEur (): number {
-    return this.eur + this.rub / this.eurCost + this.usdCost * this.usd / this.eurCost;
+    return this.eur + this.rub / this.eurPrice + this.usdPrice * this.usd / this.eurPrice;
   }
 
   totalOwnRub (): number {
-    return this.ownRub + this.usdCost * this.ownUsd + this.eurCost * this.ownEur;
+    return this.ownRub + this.usdPrice * this.ownUsd + this.eurPrice * this.ownEur;
   }
 
   totalOwnUsd (): number {
-    return this.ownUsd + this.ownRub / this.usdCost + this.eurCost * this.ownEur / this.usdCost;
+    return this.ownUsd + this.ownRub / this.usdPrice + this.eurPrice * this.ownEur / this.usdPrice;
   }
 
   totalOwnEur (): number {
-    return this.ownEur + this.ownRub / this.eurCost + this.usdCost * this.ownUsd / this.eurCost;
+    return this.ownEur + this.ownRub / this.eurPrice + this.usdPrice * this.ownUsd / this.eurPrice;
   }
 }

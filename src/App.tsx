@@ -6,9 +6,8 @@ import { loadOps } from './api/operations';
 import './App.scss';
 import { HistoryBlock } from './blocks/history';
 import { PortfolioBlock } from './blocks/portfolio';
+import { TopPanelBlock } from './blocks/topPanel';
 import { EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
-import { Rub } from './widgets/spans';
-import { Tabs } from './widgets/tabs';
 
 interface State {
   instrumentsMap?: InstrumentsMap;
@@ -38,7 +37,10 @@ class App extends React.Component<{}, State> {
     if (!instrumentsMap || !ops || !candles) {
       return (
         <div className='cApp'>
-          <Tabs activeTab={activeTab} onTabClick={(tab): void => this.setState({ activeTab: tab })} />
+          <TopPanelBlock
+            activeTab={activeTab}
+            onTabClick={(tab): void => this.setState({ activeTab: tab })}
+          />
           <div className='cApp-body' />
         </div>
       );
@@ -51,12 +53,14 @@ class App extends React.Component<{}, State> {
 
       return (
         <div className='cApp'>
-          <Tabs activeTab={activeTab} onTabClick={(tab): void => this.setState({ activeTab: tab })} />
+          <TopPanelBlock
+            activeTab={activeTab}
+            onTabClick={(tab): void => this.setState({ activeTab: tab })}
+            usdPrice={stats.usdPrice()}
+            eurPrice={stats.eurPrice()}
+          />
           <div className='cApp-body'>
             <PortfolioBlock instruments={instrumentsMap} portfolio={portfolio} />
-          </div>
-          <div className='cApp-footer'>
-            USD: <Rub v={portfolio.usdCost} /> EUR: <Rub v={portfolio.eurCost} />
           </div>
         </div>
       );
@@ -64,12 +68,14 @@ class App extends React.Component<{}, State> {
 
     return (
       <div className='cApp'>
-        <Tabs activeTab={activeTab} onTabClick={(tab): void => this.setState({ activeTab: tab })} />
+        <TopPanelBlock
+          activeTab={activeTab}
+          onTabClick={(tab): void => this.setState({ activeTab: tab })}
+          usdPrice={stats.usdPrice()}
+          eurPrice={stats.eurPrice()}
+        />
         <div className='cApp-body'>
           <HistoryBlock dayStats={stats.timeline()} />
-        </div>
-        <div className='cApp-footer'>
-          USD: <Rub v={stats.usdCost()} /> EUR: <Rub v={stats.eurCost()} />
         </div>
       </div>
     );
