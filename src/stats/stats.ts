@@ -144,7 +144,8 @@ export class Stats {
               figi,
               amount: quantity,
               cost: -1,
-              currency
+              currency,
+              ops: []
             };
           } else {
             portfolio[figi].amount += quantity;
@@ -225,10 +226,12 @@ export class Stats {
             figi,
             amount: quantity,
             cost: -1,
-            currency
+            currency,
+            ops: [op]
           };
         } else {
           result.instruments[figi].amount += quantity;
+          result.instruments[figi].ops.push(op);
         }
       }
 
@@ -243,6 +246,7 @@ export class Stats {
           result.eur -= quantity;
         } else {
           result.instruments[figi].amount -= quantity;
+          result.instruments[figi].ops.push(op);
         }
       }
 
@@ -254,6 +258,14 @@ export class Stats {
         } else {
           result.ownEur += op.payment;
         }
+      }
+
+      if (op.operationType === "Dividend") {
+        if (figi === undefined) {
+          throw Error("undefined in op figi");
+        }
+
+        result.instruments[figi].ops.push(op);
       }
     }
 

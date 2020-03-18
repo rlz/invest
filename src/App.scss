@@ -1,6 +1,13 @@
 .cApp {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+
   .cApp-body {
     padding: 0 0.7rem 0.7rem 0.7rem;
+    overflow-y: auto;
+    flex-grow: 1;
 
     h1 {
       font-size: 0.8rem;
@@ -30,10 +37,14 @@
     .cApp-row {
       display: flex;
 
-      * {
+      >* {
         width: 50%;
+        white-space: nowrap;
       }
+    }
 
+    .cApp-own,
+    .cApp-avail {
       span.currency {
         margin: 0 0.5rem;
 
@@ -45,6 +56,37 @@
           margin-right: 0;
         }
       }
+    }
+
+    .cApp-insts {
+      .cApp-inst {
+        .cApp-inst-1 {
+          display: flex;
+
+          .cApp-inst-name {
+            flex-grow: 1;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+
+      .cApp-inst-sl {
+        color: #707070;
+        margin-bottom: 0.6rem;
+      }
+    }
+  }
+
+  .cApp-footer {
+    padding: 0.5rem;
+    background-color: #D8D8D8;
+  }
+
+  .cApp-ticker-line {
+    display: flex;
+
+    .cApp-ticker {
+      flex-grow: 1;
     }
   }
 }

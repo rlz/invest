@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import React from 'react';
 import { Candle, loadCandles } from './api/candles';
 import { Operation } from './api/common';
@@ -6,6 +7,7 @@ import { loadOps } from './api/operations';
 import './App.scss';
 import { InstrumentState } from './stats/instrumentState';
 import { DayStats, EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
+import { CurrenciesCalc, toEur, toRub, toUsd } from './tools/currencies';
 import { Cur, Eur, Rub, Usd } from './widgets/spans';
 import { Tabs } from './widgets/tabs';
 
@@ -15,13 +17,15 @@ interface State {
   candles?: { [figi: string]: Candle[] };
 
   expandedDays: ReadonlySet<string>;
+  expandedInstruments: ReadonlySet<string>;
 }
 
 class App extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      expandedDays: new Set()
+      expandedDays: new Set(),
+      expandedInstruments: new Set()
     };
   }
 
@@ -71,15 +75,22 @@ class App extends React.Component<{}, State> {
     const stats = new Stats(instrumentsMap, ops, candles);
     const portfolio = stats.portfolio();
 
+    const totalPortfolioCost = new CurrenciesCalc(portfolio.usdCost, portfolio.eurCost);
+    totalPortfolioCost.addRub(portfolio.totalRub());
+    for (const i of Object.values(portfolio.instruments)) {
+      totalPortfolioCost.add(i.currency, i.amount * i.cost);
+    }
+
     return (
       <div className='cApp'>
         <Tabs activeTab={0} onTabClick={(): void => { return; }} />
         <div className='cApp-body'>
           <h1>Полная стоимость портфеля</h1>
           <div className='cApp-full-cost'>
-            <Rub v={-1} />
-            <Usd v={-1} />
-            <Eur v={-1} />
+            <Rub v={totalPortfolioCost.rub()} />
+            <Usd v={totalPortfolioCost.usd()} />
+            <Eur v={totalPortfolioCost.eur()} />
+            <span className='cApp-pc'>{((totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub() * 100).toFixed(2)}%</span>
           </div>
           <div className='cApp-own cApp-row'>
             <div>
@@ -111,47 +122,141 @@ class App extends React.Component<{}, State> {
               </div>
             </div>
           </div>
-          <div className='cApp-inst'>
+          <div className='cApp-insts'>
             <h2>Инструменты</h2>
-            {this.renderPortfolio()}
+            <div className='cApp-portfolio'>
+              {Object.values(portfolio.instruments)
+                .sort((a, b) => {
+                  const c = (
+                    toRub(b.currency, b.amount * b.cost, portfolio.usdCost, portfolio.eurCost)
+                    - toRub(a.currency, a.amount * a.cost, portfolio.usdCost, portfolio.eurCost)
+                  );
+                  if (c !== 0) return c;
+                  const aTicker = instrumentsMap[a.figi]?.ticker;
+                  const bTicker = instrumentsMap[b.figi]?.ticker;
+                  if (aTicker === undefined || bTicker === undefined) {
+                    throw Error("Unknown instruments");
+                  }
+                  return aTicker.localeCompare(bTicker);
+                })
+                .map(i => this.renderInstrument(i, portfolio.usdCost, portfolio.eurCost))}
+            </div>
           </div>
-          {/* {this.renderDays()} */}
-          {/* {this.renderOps()} */}
+        </div>
+        <div className='cApp-footer'>
+          USD: <Rub v={portfolio.usdCost} /> EUR: <Rub v={portfolio.eurCost} />
         </div>
       </div>
     );
   }
 
-  renderPortfolio (): JSX.Element | undefined {
-    const { instrumentsMap, ops, candles } = this.state;
-
-    if (!instrumentsMap || !ops || !candles) {
-      return;
-    }
-
-    const stats = new Stats(instrumentsMap, ops, candles);
-    const portfolio = stats.portfolio();
-
-    return (
-      <div className='cApp-portfolio'>
-        {Object.values(portfolio.instruments).map(i => this.renderInstrument(i))}
-      </div>
-    );
-  }
-
-  renderInstrument (i: InstrumentState): JSX.Element | undefined {
+  renderInstrument (i: InstrumentState, usdCost: number, eurCost: number): JSX.Element[] {
     const { instrumentsMap } = this.state;
 
-    if (!instrumentsMap) {
-      return;
+    if (!instrumentsMap) throw Error("No instruments map loaded!");
+    const instrumentInfo = instrumentsMap[i.figi];
+    if (instrumentInfo === undefined) throw Error("Unknown instrument");
+
+    let effect = 0;
+
+    for (const op of i.ops) {
+      if (op.operationType.startsWith("Buy")) {
+        effect -= op.price * op.quantity;
+      } else if (op.operationType === "Sell") {
+        effect += op.price * op.quantity;
+      } else if (op.operationType === "Dividend") {
+        effect += op.payment;
+      }
     }
-    const name = instrumentsMap[i.figi]?.name;
-    return (
-      <div key={i.figi}>
-        {name} <Cur t={i.currency} v={i.amount * i.cost} />{' '}
-        ({i.amount}{'\xD7'}<Cur t={i.currency} v={i.cost} />)
+
+    effect += i.amount * i.cost;
+
+    const result = [
+      <div key={i.figi} className='cApp-inst cApp-row'>
+        <div className='cApp-inst-1'>
+          <div
+            className='cApp-inst-name'
+            onClick={(): void => {
+              if (this.state.expandedInstruments.has(i.figi)) {
+                const ei = new Set(this.state.expandedInstruments);
+                ei.delete(i.figi);
+                this.setState({ expandedInstruments: ei });
+              } else {
+                const ei = new Set(this.state.expandedInstruments);
+                ei.add(i.figi);
+                this.setState({ expandedInstruments: ei });
+              }
+            }}
+          >
+            {instrumentInfo.name}
+          </div>
+          <div>
+            {i.amount} {'\xD7'} <Cur t={i.currency} v={i.cost} /> = <Cur t={i.currency} v={i.amount * i.cost} />
+          </div>
+        </div>
+        <div>
+          <Rub v={toRub(i.currency, i.cost * i.amount, usdCost, eurCost)} />
+          <Usd v={toUsd(i.currency, i.cost * i.amount, usdCost, eurCost)} />
+          <Eur v={toEur(i.currency, i.cost * i.amount, usdCost, eurCost)} />
+        </div>
+      </div>,
+      <div key={i.figi + "-sl"} className='cApp-inst-sl cApp-row'>
+        <div className='cApp-ticker-line'>
+          <div className='cApp-ticker'>
+            {instrumentInfo.ticker}
+          </div>
+          <div>
+            <Cur t={i.currency} v={effect} />
+          </div>
+        </div>
+        <div>ggg</div>
       </div>
-    );
+    ];
+
+    if (this.state.expandedInstruments.has(i.figi)) {
+      const ops = i.ops.reverse();
+      result.push(
+        <div className='cApp-inst-ops'>
+          {ops.map(op => this.renderOperation(i, op))}
+        </div>
+      );
+    }
+
+    return result;
+  }
+
+  renderOperation (i: InstrumentState, op: Operation): JSX.Element {
+    if (op.operationType === "Buy" || op.operationType === "BuyCard") {
+      return (
+        <div className='cApp-op'>
+          {DateTime.fromISO(op.date).toISODate()}{' '}
+          Покупка{' '}
+          {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
+          = <Cur t={op.currency} v={op.quantity * op.price} />
+        </div>
+      );
+    }
+
+    if (op.operationType === "Sell") {
+      return (
+        <div className='cApp-op'>
+          {DateTime.fromISO(op.date).toISODate()}{' '}
+          Продажа{' '}
+          {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
+          = <Cur t={op.currency} v={op.quantity * op.price} />
+        </div>
+      );
+    }
+
+    if (op.operationType === "Dividend") {
+      return (
+        <div className='cApp-op'>
+          {DateTime.fromISO(op.date).toISODate()} Dividend <Cur t={op.currency} v={op.payment} />
+        </div>
+      );
+    }
+
+    throw Error("Unexpected operationType");
   }
 
   renderDays (): JSX.Element | undefined {
