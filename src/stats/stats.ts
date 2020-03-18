@@ -55,6 +55,14 @@ export class Stats {
     this.candles = candles;
   }
 
+  usdCost (): number {
+    return lastPrice(this.candles[USD_FIGI]);
+  }
+
+  eurCost (): number {
+    return lastPrice(this.candles[EUR_FIGI]);
+  }
+
   allInstruments (): Instrument[] {
     const figi = new Map<string, Instrument>();
     for (const op of this.ops) {
