@@ -7,13 +7,6 @@
     margin: 0.9rem 0 0.3rem 0;
   }
 
-  h2 {
-    font-size: 0.8rem;
-    color: #707070;
-    font-weight: normal;
-    margin: 0.9rem 0 0.3rem 0;
-  }
-
   .bPortfolio-full-cost {
     display: flex;
     justify-content: center;
@@ -24,53 +17,58 @@
     }
   }
 
-  .bPortfolio-row {
-    display: flex;
+  table {
+    width: 100%;
+    border-collapse: collapse;
 
-    >* {
-      width: 50%;
+    th {
+      font-size: 0.8rem;
+      color: #707070;
+      font-weight: normal;
+      text-align: left;
+
+      &.th-first-line {
+        padding-top: 1rem;
+      }
+    }
+
+    td {
       white-space: nowrap;
     }
-  }
 
-  .bPortfolio-own,
-  .bPortfolio-avail {
-    span.currency {
-      margin: 0 0.5rem;
-
-      &:first-child {
-        margin-left: 0;
-      }
-
-      &:last-child {
-        margin-right: 0;
-      }
+    td.name {
+      font-weight: bold;
     }
-  }
 
-  .bPortfolio-insts {
-    .bPortfolio-inst {
-      .bPortfolio-inst-1 {
-        display: flex;
+    tr.total {
+      font-weight: bold;
+    }
 
-        .bPortfolio-inst-name {
-          flex-grow: 1;
-          text-overflow: ellipsis;
-        }
+    tr.inst-main-line {
+      td {
+        padding-top: 1rem;
       }
     }
 
-    .bPortfolio-inst-sl {
+    tr.inst-ticker-line {
       color: #707070;
-      margin-bottom: 0.6rem;
     }
-  }
 
-  .bPortfolio-ticker-line {
-    display: flex;
+    tr.op-line {
+      font-weight: lighter;
+    }
 
-    .bPortfolio-ticker {
-      flex-grow: 1;
+    button {
+      cursor: pointer;
+      font-style: italic;
+      border: none;
+      font-size: 0.7rem;
+      padding: 0;
+    }
+
+    .all-cur {
+      padding: 0 0.5rem;
+      background-color: #f0f0f0;
     }
   }
 }

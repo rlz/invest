@@ -4,7 +4,7 @@ import { Instrument, InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from './instrumentState';
 import { Portfolio } from './portfolio';
 
-const NoFigiOps = new Set(["PayIn", "Tax", "TaxBack", "PayOut"]);
+const NoFigiOps = new Set(["PayIn", "Tax", "TaxBack", "PayOut", "MarginCommission"]);
 export const EUR_FIGI = "BBG0013HJJ31";
 export const USD_FIGI = "BBG0013HGFT4";
 
@@ -252,6 +252,18 @@ export class Stats {
           result.usd -= quantity;
         } else if (figi === EUR_FIGI) {
           result.eur -= quantity;
+        } else if (result.instruments[figi] === undefined) {
+          const currency = this.instrumentsMap[figi]?.currency;
+
+          if (currency === undefined) throw Error("Unknown instrument");
+
+          result.instruments[figi] = {
+            figi,
+            amount: -quantity,
+            cost: -1,
+            currency,
+            ops: [op]
+          };
         } else {
           result.instruments[figi].amount -= quantity;
           result.instruments[figi].ops.push(op);

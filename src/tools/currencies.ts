@@ -1,24 +1,24 @@
 import { Currency } from '../api/common';
 
-export function toRub (currency: Currency, amount: number, usdCost: number, eurCost: number): number {
+export function toRub (currency: Currency, amount: number, usdPrice: number, eurPrice: number): number {
   if (currency === "RUB") {
     return amount;
   }
 
   if (currency === "USD") {
-    return amount * usdCost;
+    return amount * usdPrice;
   }
 
   if (currency === "EUR") {
-    return amount * eurCost;
+    return amount * eurPrice;
   }
 
   throw Error("Unknown currency");
 }
 
-export function toUsd (currency: Currency, amount: number, usdCost: number, eurCost: number): number {
+export function toUsd (currency: Currency, amount: number, usdPrice: number, eurPrice: number): number {
   if (currency === "RUB") {
-    return amount / usdCost;
+    return amount / usdPrice;
   }
 
   if (currency === "USD") {
@@ -26,19 +26,19 @@ export function toUsd (currency: Currency, amount: number, usdCost: number, eurC
   }
 
   if (currency === "EUR") {
-    return (amount * eurCost) / usdCost;
+    return (amount * eurPrice) / usdPrice;
   }
 
   throw Error("Unknown currency");
 }
 
-export function toEur (currency: Currency, amount: number, usdCost: number, eurCost: number): number {
+export function toEur (currency: Currency, amount: number, usdPrice: number, eurPrice: number): number {
   if (currency === "RUB") {
-    return amount / eurCost;
+    return amount / eurPrice;
   }
 
   if (currency === "USD") {
-    return (amount * usdCost) / eurCost;
+    return (amount * usdPrice) / eurPrice;
   }
 
   if (currency === "EUR") {
@@ -54,9 +54,9 @@ export class CurrenciesCalc {
 
   private rubTotal = 0
 
-  constructor(usdCost: number, eurCost: number) {
-    this.usdCost = usdCost;
-    this.eurCost = eurCost;
+  constructor(usdPrice: number, eurPrice: number) {
+    this.usdCost = usdPrice;
+    this.eurCost = eurPrice;
   }
 
   add (currency: Currency, amount: number): void {

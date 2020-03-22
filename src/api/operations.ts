@@ -9,7 +9,6 @@ interface OpsResponse extends OkResponse {
 }
 
 export async function loadOps (): Promise<Operation[]> {
-  // curl -X GET "https://api-invest.tinkoff.ru/openapi/operations?from=2020-01-01T00%3A00%3A00.000000%2B03%3A00&to=2020-02-28T18%3A38%3A33.131642%2B03%3A00" -H "accept: application/json" -H "Authorization: Bearer t.j6DxpzoSxsEyptf5Ahbp66RLQAfarEMFNbuu1TZmZ5KxwT6SQo8L31r1W7m9V8BWx0Tu_QrXMTQJsCa-zDL4_w"
   const url = new URL('/openapi/operations', 'https://api-invest.tinkoff.ru');
   url.searchParams.set('from', '1900-01-01T00:00:00Z');
   url.searchParams.set('to', new Date().toISOString());

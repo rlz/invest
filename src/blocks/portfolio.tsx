@@ -1,9 +1,11 @@
+import { faAngleRight, faChevronDown, faChevronUp, faCoins, faWallet } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DateTime } from "luxon";
 import React from "react";
-import { Operation } from "../api/common";
+import { Currency, Operation } from '../api/common';
 import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from "../stats/instrumentState";
-import { Portfolio } from "../stats/portfolio";
+import { Portfolio } from '../stats/portfolio';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
 import { Cur, Eur, Rub, Usd } from "../widgets/spans";
 import './portfolio.scss';
@@ -66,48 +68,86 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <Eur v={totalPortfolioCost.eur()} />
           <span className='bPortfolio-pc'>{((totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub() * 100).toFixed(2)}%</span>
         </div>
-        <div className='bPortfolio-own bPortfolio-row'>
-          <div>
-            <h2>Собственные средства</h2>
-            <div>
-              <Rub v={portfolio.ownRub} /> <Usd v={portfolio.ownUsd} /> <Eur v={portfolio.ownEur} />
-            </div>
-          </div>
-          <div>
-            <h2>Итого</h2>
-            <div>
-              <Rub v={portfolio.totalOwnRub()} />{' '}
-              <Usd v={portfolio.totalOwnUsd()} />{' '}
-              <Eur v={portfolio.totalOwnEur()} />
-            </div>
-          </div>
-        </div>
-        <div className='bPortfolio-avail bPortfolio-row'>
-          <div>
-            <h2>Доступно</h2>
-            <div>
-              <Rub v={portfolio.rub} /> <Usd v={portfolio.usd} /> <Eur v={portfolio.eur} />
-            </div>
-          </div>
-          <div>
-            <h2>Итого</h2>
-            <div>
-              <Rub v={portfolio.totalRub()} /> <Usd v={portfolio.totalUsd()} /> <Eur v={portfolio.totalEur()} />
-            </div>
-          </div>
-        </div>
-        <div className='bPortfolio-insts'>
-          <h2>Инструменты</h2>
-          <div className='bPortfolio-portfolio'>
+        <table>
+          <tbody>
+            {this.renderOwnMoney(portfolio)}
+            {this.renderAvailable(portfolio)}
+            <tr>
+              <th colSpan={2} className='th-first-line'>Инструменты</th>
+              {this.renderEmptyAllCurrenciesColumns()}
+            </tr>
             {sortInstruments(portfolio.instruments, instruments, portfolio.usdPrice, portfolio.eurPrice)
               .map(i => this.renderInstrument(i, portfolio.usdPrice, portfolio.eurPrice))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     );
   }
 
-  renderInstrument (i: InstrumentState, usdCost: number, eurCost: number): JSX.Element[] {
+  renderAvailable (portfolio: Portfolio): JSX.Element[] {
+    const availLine = (c: Currency): JSX.Element => {
+      let v = portfolio.rub;
+      if (c === "USD") v = portfolio.usd;
+      if (c === "EUR") v = portfolio.eur;
+      return (
+        <tr key={`avail-${c}`}>
+          <td colSpan={2}>
+            <Cur t={c} v={v} />
+          </td>
+          {this.renderAllCurrenciesColumns(c, v, portfolio.usdPrice, portfolio.eurPrice)}
+        </tr>
+      );
+    };
+
+    return [
+      <tr key='available-th'>
+        <th colSpan={2} className='th-first-line'>Доступно</th>
+        {this.renderEmptyAllCurrenciesColumns()}
+      </tr>,
+      availLine("RUB"),
+      availLine("USD"),
+      availLine("EUR"),
+      <tr key='available-total' className='total'>
+        <th colSpan={2}>
+          Всего
+        </th>
+        {this.renderAllCurrenciesColumns("RUB", portfolio.totalRub(), portfolio.usdPrice, portfolio.eurPrice)}
+      </tr>
+    ];
+  }
+
+  renderOwnMoney (portfolio: Portfolio): JSX.Element[] {
+    const ownMoneyLine = (c: Currency): JSX.Element => {
+      const ownMoneyCase = { "RUB": "ownRub", "USD": "ownUsd", "EUR": "ownEur" }[c];
+      const v = (portfolio as unknown as { [_: string]: number })[ownMoneyCase];
+      return (
+        <tr key={`ownMoney-${c.toLowerCase()}`}>
+          <td colSpan={2}>
+            <Cur t={c} v={v} />
+          </td>
+          {this.renderAllCurrenciesColumns(c, v, portfolio.usdPrice, portfolio.eurPrice)}
+        </tr>
+      );
+    };
+
+    return [
+      <tr key='ownMoney-th'>
+        <th colSpan={2} className='th-first-line'>Собственные средства</th>
+        <th colSpan={3} className='all-cur'>Итого</th>
+      </tr>,
+      ownMoneyLine("RUB"),
+      ownMoneyLine("USD"),
+      ownMoneyLine("EUR"),
+      <tr key='ownMoney-total' className='total'>
+        <th colSpan={2}>
+          Всего
+        </th>
+        {this.renderAllCurrenciesColumns("RUB", portfolio.totalOwnRub(), portfolio.usdPrice, portfolio.eurPrice)}
+      </tr>
+    ];
+  }
+
+  renderInstrument (i: InstrumentState, usdPrice: number, eurPrice: number): JSX.Element[] {
     const { instruments } = this.props;
 
     if (!instruments) throw Error("No instruments map loaded!");
@@ -128,91 +168,119 @@ export class PortfolioBlock extends React.Component<Props, State> {
 
     effect += i.amount * i.cost;
 
+    const op1 = i.ops[i.ops.length - 1];
+
     const result = [
-      <div key={i.figi} className='bPortfolio-inst bPortfolio-row'>
-        <div className='bPortfolio-inst-1'>
-          <div
-            className='bPortfolio-inst-name'
-            onClick={(): void => {
-              if (this.state.expandedInstruments.has(i.figi)) {
-                const ei = new Set(this.state.expandedInstruments);
-                ei.delete(i.figi);
-                this.setState({ expandedInstruments: ei });
-              } else {
-                const ei = new Set(this.state.expandedInstruments);
-                ei.add(i.figi);
-                this.setState({ expandedInstruments: ei });
-              }
-            }}
-          >
-            {instrumentInfo.name}
-          </div>
-          <div>
-            {i.amount} {'\xD7'} <Cur t={i.currency} v={i.cost} /> = <Cur t={i.currency} v={i.amount * i.cost} />
-          </div>
-        </div>
-        <div>
-          <Rub v={toRub(i.currency, i.cost * i.amount, usdCost, eurCost)} />
-          <Usd v={toUsd(i.currency, i.cost * i.amount, usdCost, eurCost)} />
-          <Eur v={toEur(i.currency, i.cost * i.amount, usdCost, eurCost)} />
-        </div>
-      </div>,
-      <div key={i.figi + "-sl"} className='bPortfolio-inst-sl bPortfolio-row'>
-        <div className='bPortfolio-ticker-line'>
-          <div className='bPortfolio-ticker'>
-            {instrumentInfo.ticker}
-          </div>
-          <div>
-            <Cur t={i.currency} v={effect} />
-          </div>
-        </div>
-        <div>ggg</div>
-      </div>
+      <tr key={i.figi} className='inst-main-line'>
+        <td className='name'>
+          {instrumentInfo.name}
+        </td>
+        <td>{i.amount} {'\xD7'} <Cur t={i.currency} v={i.cost} /> = <Cur t={i.currency} v={i.amount * i.cost} /></td>
+        {this.renderAllCurrenciesColumns(i.currency, i.cost * i.amount, usdPrice, eurPrice)}
+      </tr>,
+      <tr key={i.figi + "-sl"} className='inst-ticker-line'>
+        <td className='ticker'>
+          {instrumentInfo.ticker}
+        </td>
+        <td><Cur t={i.currency} v={effect} /></td>
+        {this.renderAllCurrenciesColumns(i.currency, effect, usdPrice, eurPrice)}
+      </tr>
     ];
 
     if (this.state.expandedInstruments.has(i.figi)) {
-      const ops = i.ops.reverse();
       result.push(
-        <div className='bPortfolio-inst-ops'>
-          {ops.map(op => this.renderOperation(i, op))}
-        </div>
+        <tr key={`expand-${i.figi}`}>
+          <td colSpan={2}>
+            {i.ops.length} операций{' '}
+            <button onClick={(): void => this.switchOps(i.figi)}>
+              <FontAwesomeIcon icon={faChevronUp} /> Скрыть
+            </button>
+          </td>
+          {this.renderEmptyAllCurrenciesColumns()}
+        </tr>
+      );
+
+      const ops = [...i.ops].reverse();
+
+      for (const op of ops) {
+        result.push(this.renderOperation(i, op, usdPrice, eurPrice));
+      }
+    } else {
+      result.push(
+        this.renderOperation(i, op1, usdPrice, eurPrice)
+      );
+      result.push(
+        <tr key={`expand-${i.figi}`}>
+          <td colSpan={2}>
+            {i.ops.length} операций{' '}
+            <button onClick={(): void => this.switchOps(i.figi)}>
+              <FontAwesomeIcon icon={faChevronDown} /> Показать все
+            </button>
+          </td>
+          {this.renderEmptyAllCurrenciesColumns()}
+        </tr>
       );
     }
 
     return result;
   }
 
-  renderOperation (i: InstrumentState, op: Operation): JSX.Element {
-    if (op.operationType === "Buy" || op.operationType === "BuyCard") {
-      return (
-        <div className='bPortfolio-op'>
-          {DateTime.fromISO(op.date).toISODate()}{' '}
-          Покупка{' '}
-          {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
-          = <Cur t={op.currency} v={op.quantity * op.price} />
-        </div>
-      );
+  private switchOps (figi: string): void {
+    const newSet = new Set(this.state.expandedInstruments);
+    if (newSet.has(figi)) {
+      newSet.delete(figi);
+    } else {
+      newSet.add(figi);
     }
+    this.setState({ expandedInstruments: newSet });
+  }
 
-    if (op.operationType === "Sell") {
+  renderOperation (i: InstrumentState, op: Operation, usdPrice: number, eurPrice: number): JSX.Element {
+    if (op.operationType === "Buy" || op.operationType === "BuyCard" || op.operationType === "Sell") {
+      const opName = {
+        "Buy": <span><FontAwesomeIcon icon={faAngleRight} /> <FontAwesomeIcon icon={faWallet} /></span>,
+        "BuyCard": <span><FontAwesomeIcon icon={faAngleRight} /> <FontAwesomeIcon icon={faWallet} /></span>,
+        "Sell": <span><FontAwesomeIcon icon={faWallet} /> <FontAwesomeIcon icon={faAngleRight} /></span>
+      }[op.operationType as unknown as "Buy" | "BuyCard" | "Sell"];
+
       return (
-        <div className='bPortfolio-op'>
-          {DateTime.fromISO(op.date).toISODate()}{' '}
-          Продажа{' '}
-          {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
-          = <Cur t={op.currency} v={op.quantity * op.price} />
-        </div>
+        <tr key={`${i.figi}-op-${op.date}-${op.id}`} className='op-line'>
+          <td>{DateTime.fromISO(op.date).toISODate()} {opName}</td>
+          <td>
+            {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
+            = <Cur t={op.currency} v={op.quantity * op.price} />
+          </td>
+          {this.renderAllCurrenciesColumns(op.currency, op.quantity * op.price, usdPrice, eurPrice)}
+        </tr>
       );
     }
 
     if (op.operationType === "Dividend") {
       return (
-        <div className='bPortfolio-op'>
-          {DateTime.fromISO(op.date).toISODate()} Dividend <Cur t={op.currency} v={op.payment} />
-        </div>
+        <tr key={`${i.figi}-op-${op.date}-${op.id}`} className='op-line'>
+          <td>{DateTime.fromISO(op.date).toISODate()} <FontAwesomeIcon icon={faCoins} /></td>
+          <td><Cur t={op.currency} v={op.payment} /></td>
+          {this.renderAllCurrenciesColumns(op.currency, op.payment, usdPrice, eurPrice)}
+        </tr>
       );
     }
 
     throw Error("Unexpected operationType");
+  }
+
+  renderAllCurrenciesColumns (cur: Currency, amount: number, usdPrice: number, eurPrice: number): JSX.Element[] {
+    return [
+      <td key='total-rub' className='all-cur'><Rub v={toRub(cur, amount, usdPrice, eurPrice)} /></td>,
+      <td key='total-usd' className='all-cur'><Usd v={toUsd(cur, amount, usdPrice, eurPrice)} /></td>,
+      <td key='total-eur' className='all-cur'><Eur v={toEur(cur, amount, usdPrice, eurPrice)} /></td>
+    ];
+  }
+
+  renderEmptyAllCurrenciesColumns (): JSX.Element[] {
+    return [
+      <td key='total-rub' className='all-cur' />,
+      <td key='total-usd' className='all-cur' />,
+      <td key='total-eur' className='all-cur' />
+    ];
   }
 }
