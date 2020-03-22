@@ -7,6 +7,7 @@ import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from "../stats/instrumentState";
 import { Portfolio } from '../stats/portfolio';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
+import { plural } from '../tools/lang';
 import { Cur, Eur, Prc, Rub, Usd } from "../widgets/spans";
 import './portfolio.scss';
 
@@ -205,19 +206,34 @@ export class PortfolioBlock extends React.Component<Props, State> {
       for (const op of ops) {
         result.push(this.renderOperation(i, op, usdPrice, eurPrice));
       }
-    } else {
+    } else if (i.ops.length === 1) {
+      result.push(
+        <tr key={`expand-${i.figi}`}>
+          <td colSpan={2}>1 операция</td>
+          {this.renderEmptyAllCurrenciesColumns()}
+        </tr>
+      );
       result.push(
         this.renderOperation(i, op1, usdPrice, eurPrice)
       );
+    } else {
       result.push(
         <tr key={`expand-${i.figi}`}>
           <td colSpan={2}>
-            {i.ops.length} операций{' '}
+            {i.ops.length} {plural(i.ops.length, "операция", "операции", "операций")}{' '}
             <button onClick={(): void => this.switchOps(i.figi)}>
               <FontAwesomeIcon icon={faChevronDown} /> Показать все
             </button>
           </td>
           {this.renderEmptyAllCurrenciesColumns()}
+        </tr>
+      );
+      result.push(
+        this.renderOperation(i, op1, usdPrice, eurPrice)
+      );
+      result.push(
+        <tr key={`op-more-${i.figi}`}>
+          <td colSpan={2}>...</td>
         </tr>
       );
     }
