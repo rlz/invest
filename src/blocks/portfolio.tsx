@@ -7,7 +7,7 @@ import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from "../stats/instrumentState";
 import { Portfolio } from '../stats/portfolio';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
-import { Cur, Eur, Rub, Usd } from "../widgets/spans";
+import { Cur, Eur, Prc, Rub, Usd } from "../widgets/spans";
 import './portfolio.scss';
 
 interface Props {
@@ -66,7 +66,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <Rub v={totalPortfolioCost.rub()} />
           <Usd v={totalPortfolioCost.usd()} />
           <Eur v={totalPortfolioCost.eur()} />
-          <span className='bPortfolio-pc'>{((totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub() * 100).toFixed(2)}%</span>
+          <Prc v={(totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub()} color />
         </div>
         <table>
           <tbody>
@@ -132,7 +132,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
 
     return [
       <tr key='ownMoney-th'>
-        <th colSpan={2} className='th-first-line'>Собственные средства</th>
+        <th colSpan={2} className='th-first-line'>Инвестированно (выведено)</th>
         <th colSpan={3} className='all-cur'>Итого</th>
       </tr>,
       ownMoneyLine("RUB"),
@@ -182,8 +182,8 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <td className='ticker'>
           {instrumentInfo.ticker}
         </td>
-        <td><Cur t={i.currency} v={effect} /></td>
-        {this.renderAllCurrenciesColumns(i.currency, effect, usdPrice, eurPrice)}
+        <td><Cur t={i.currency} v={effect} color /></td>
+        {this.renderAllCurrenciesColumns(i.currency, effect, usdPrice, eurPrice, true)}
       </tr>
     ];
 
@@ -268,11 +268,13 @@ export class PortfolioBlock extends React.Component<Props, State> {
     throw Error("Unexpected operationType");
   }
 
-  renderAllCurrenciesColumns (cur: Currency, amount: number, usdPrice: number, eurPrice: number): JSX.Element[] {
+  renderAllCurrenciesColumns (
+    cur: Currency, amount: number, usdPrice: number, eurPrice: number, color?: boolean
+  ): JSX.Element[] {
     return [
-      <td key='total-rub' className='all-cur'><Rub v={toRub(cur, amount, usdPrice, eurPrice)} /></td>,
-      <td key='total-usd' className='all-cur'><Usd v={toUsd(cur, amount, usdPrice, eurPrice)} /></td>,
-      <td key='total-eur' className='all-cur'><Eur v={toEur(cur, amount, usdPrice, eurPrice)} /></td>
+      <td key='total-rub' className='all-cur'><Rub v={toRub(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
+      <td key='total-usd' className='all-cur'><Usd v={toUsd(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
+      <td key='total-eur' className='all-cur'><Eur v={toEur(cur, amount, usdPrice, eurPrice)} color={color} /></td>
     ];
   }
 

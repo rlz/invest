@@ -1,0 +1,9 @@
+span {
+  &.positive.color {
+    color: rgb(68, 158, 68);
+  }
+
+  &.negative.color {
+    color: rgb(255, 111, 111);
+  }
+}

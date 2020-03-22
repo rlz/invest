@@ -10,6 +10,7 @@
   .bPortfolio-full-cost {
     display: flex;
     justify-content: center;
+    margin-bottom: 1rem;
 
     span {
       padding: 0 1rem;
@@ -52,6 +53,7 @@
 
     tr.inst-ticker-line {
       color: #707070;
+      font-size: 0.9rem;
     }
 
     tr.op-line {
