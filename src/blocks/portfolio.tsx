@@ -7,6 +7,7 @@ import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from "../stats/instrumentState";
 import { Portfolio } from '../stats/portfolio';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
+import { sortInstruments } from "../tools/instruments";
 import { plural } from '../tools/lang';
 import { Cur, Eur, Prc, Rub, Usd } from "../widgets/spans";
 import './portfolio.scss';
@@ -18,28 +19,6 @@ interface Props {
 
 interface State {
   expandedInstruments: ReadonlySet<string>;
-}
-
-function sortInstruments (
-  states: { [figi: string]: InstrumentState },
-  infos: InstrumentsMap,
-  usdPrice: number,
-  eurPrice: number
-): InstrumentState[] {
-  return Object.values(states)
-    .sort((a, b) => {
-      const c = (
-        Math.abs(toRub(b.currency, b.amount * b.cost, usdPrice, eurPrice))
-        - Math.abs(toRub(a.currency, a.amount * a.cost, usdPrice, eurPrice))
-      );
-      if (c !== 0) return c;
-      const aTicker = infos[a.figi]?.ticker;
-      const bTicker = infos[b.figi]?.ticker;
-      if (aTicker === undefined || bTicker === undefined) {
-        throw Error("Unknown instruments");
-      }
-      return aTicker.localeCompare(bTicker);
-    });
 }
 
 export class PortfolioBlock extends React.Component<Props, State> {
@@ -57,7 +36,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
     const totalPortfolioCost = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice);
     totalPortfolioCost.addRub(portfolio.totalRub());
     for (const i of Object.values(portfolio.instruments)) {
-      totalPortfolioCost.add(i.currency, i.amount * i.cost);
+      totalPortfolioCost.add(i.currency, i.amount * i.price);
     }
 
     return (
@@ -167,7 +146,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
       }
     }
 
-    effect += i.amount * i.cost;
+    effect += i.amount * i.price;
 
     const op1 = i.ops[i.ops.length - 1];
 
@@ -176,8 +155,8 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <td className='name'>
           {instrumentInfo.name}
         </td>
-        <td>{i.amount} {'\xD7'} <Cur t={i.currency} v={i.cost} /> = <Cur t={i.currency} v={i.amount * i.cost} /></td>
-        {this.renderAllCurrenciesColumns(i.currency, i.cost * i.amount, usdPrice, eurPrice)}
+        <td>{i.amount} {'\xD7'} <Cur t={i.currency} v={i.price} /> = <Cur t={i.currency} v={i.amount * i.price} /></td>
+        {this.renderAllCurrenciesColumns(i.currency, i.price * i.amount, usdPrice, eurPrice)}
       </tr>,
       <tr key={i.figi + "-sl"} className='inst-ticker-line'>
         <td className='ticker'>

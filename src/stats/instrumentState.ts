@@ -4,6 +4,6 @@ export interface InstrumentState {
   figi: string;
   amount: number;
   currency: Currency;
-  cost: number;
+  price: number;
   ops: Operation[];
 }

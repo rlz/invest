@@ -1,4 +1,5 @@
-import { Candle, lastPrice } from '../api/candles';
+import { deepCopy } from 'deep-copy-ts';
+import { Candle, findPrice, lastPrice } from '../api/candles';
 import { Operation } from '../api/common';
 import { Instrument, InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from './instrumentState';
@@ -20,8 +21,8 @@ export interface DayStats {
   };
 
   // market cost
-  usdCost: number;
-  eurCost: number;
+  usdPrice: number;
+  eurPrice: number;
 
   // in/out ops all time
   ownRub: number;
@@ -93,13 +94,10 @@ export class Stats {
   timeline (): DayStats[] {
     const dayStats: DayStats[] = [];
 
-    const stats: Omit<DayStats, "date" | "portfolio" | "instrumentsCosts" | "ops"> = {
+    const stats: Omit<DayStats, "date" | "portfolio" | "instrumentsCosts" | "ops" | "usdPrice" | "eurPrice"> = {
       rub: 0,
       usd: 0,
       eur: 0,
-
-      usdCost: 0,
-      eurCost: 0,
 
       ownRub: 0,
       ownUsd: 0,
@@ -151,7 +149,7 @@ export class Stats {
             portfolio[figi] = {
               figi,
               amount: quantity,
-              cost: -1,
+              price: -1,
               currency,
               ops: []
             };
@@ -169,6 +167,18 @@ export class Stats {
             stats.usd -= quantity;
           } else if (figi === EUR_FIGI) {
             stats.eur -= quantity;
+          } else if (portfolio[figi] === undefined) {
+            const currency = this.instrumentsMap[figi]?.currency;
+
+            if (currency === undefined) throw Error("Unknown instrument");
+
+            portfolio[figi] = {
+              figi,
+              amount: -quantity,
+              price: -1,
+              currency,
+              ops: []
+            };
           } else {
             portfolio[figi].amount -= quantity;
           }
@@ -187,11 +197,30 @@ export class Stats {
         ops.push(op);
       }
 
+      for (const i of Object.values(portfolio)) {
+        const candles = this.candles[i.figi];
+        const price = findPrice(candles, d);
+
+        if (price === undefined) {
+          console.log(i, candles, d);
+          throw Error("Can't find price");
+        }
+
+        i.price = price;
+      }
+
+      const usdPrice = findPrice(this.candles[USD_FIGI], d);
+      if (usdPrice === undefined) throw Error("Can't find USD price");
+      const eurPrice = findPrice(this.candles[EUR_FIGI], d);
+      if (eurPrice === undefined) throw Error("Can't find EUR price");
+
       dayStats.push({
         ...stats,
         date: d,
-        portfolio,
-        ops
+        portfolio: deepCopy(portfolio),
+        ops,
+        usdPrice,
+        eurPrice
       });
     }
 
@@ -233,7 +262,7 @@ export class Stats {
           result.instruments[figi] = {
             figi,
             amount: quantity,
-            cost: -1,
+            price: -1,
             currency,
             ops: [op]
           };
@@ -260,7 +289,7 @@ export class Stats {
           result.instruments[figi] = {
             figi,
             amount: -quantity,
-            cost: -1,
+            price: -1,
             currency,
             ops: [op]
           };
@@ -290,7 +319,7 @@ export class Stats {
     }
 
     for (const i of Object.values(result.instruments)) {
-      i.cost = lastPrice(this.candles[i.figi]);
+      i.price = lastPrice(this.candles[i.figi]);
     }
 
     result.usdPrice = lastPrice(this.candles[USD_FIGI]);

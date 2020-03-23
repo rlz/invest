@@ -26,11 +26,13 @@ export async function loadCandles (figi: string, from: Date): Promise<Candle[]> 
   return data.payload.candles;
 }
 
-export function findCandleIndex (candles: Candle[], date: Date): number | undefined {
+export function findCandleIndex (
+  candles: Candle[], date: Date, lowBorder?: number, highBorder?: number
+): number | undefined {
   if (candles.length === 0) return;
 
-  let low = 0;
-  let high = candles.length - 1;
+  let low = lowBorder ?? 0;
+  let high = highBorder ?? candles.length - 1;
 
   if (date < new Date(candles[low].time))
     return;

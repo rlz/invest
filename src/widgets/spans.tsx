@@ -32,5 +32,5 @@ export const Cur = (props: { t: Currency; v: number; color?: boolean }): JSX.Ele
 
 export const Prc = (props: { v: number; color?: boolean }): JSX.Element => {
   const cls = c('percent', [props.v > 0, "positive"], [props.v < 0, "negative"], [props.color === true, "color"]);
-  return <span className={cls}>${(props.v * 100).toFixed(2)}</span>;
+  return <span className={cls}>{(props.v * 100).toFixed(2)}%</span>;
 };

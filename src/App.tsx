@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import React from 'react';
 import { Candle, loadCandles } from './api/candles';
 import { Operation } from './api/common';
@@ -23,7 +24,7 @@ class App extends React.Component<{}, State> {
 
     this.state = {
       loading: false,
-      activeTab: "PF"
+      activeTab: "TL"
     };
   }
 
@@ -75,7 +76,7 @@ class App extends React.Component<{}, State> {
           eurPrice={stats.eurPrice()}
         />
         <div className='cApp-body'>
-          <HistoryBlock dayStats={stats.timeline()} />
+          <HistoryBlock instruments={instrumentsMap} states={stats.timeline()} />
         </div>
       </div>
     );
@@ -87,26 +88,28 @@ class App extends React.Component<{}, State> {
     try {
       const instrumentsMap = await loadInstruments();
       const ops = await loadOps();
+
       const stats = new Stats(instrumentsMap, ops, {});
       const candles: { [figi: string]: Candle[] } = {};
       const cPromises: Promise<void>[] = [];
+      const candlesLoadFrom = DateTime.fromISO(ops[0].date).minus({ hours: 7 * 24 }).toJSDate();
 
       for (const i of stats.allInstruments()) {
         if (i.figi === USD_FIGI || i.figi === EUR_FIGI) continue;
 
         cPromises.push((async (): Promise<void> => {
-          const c = await loadCandles(i.figi, new Date(ops[0].date));
+          const c = await loadCandles(i.figi, candlesLoadFrom);
           candles[i.figi] = c;
         })());
       }
 
       cPromises.push((async (): Promise<void> => {
-        const c = await loadCandles(USD_FIGI, new Date(ops[0].date));
+        const c = await loadCandles(USD_FIGI, candlesLoadFrom);
         candles[USD_FIGI] = c;
       })());
 
       cPromises.push((async (): Promise<void> => {
-        const c = await loadCandles(EUR_FIGI, new Date(ops[0].date));
+        const c = await loadCandles(EUR_FIGI, candlesLoadFrom);
         candles[EUR_FIGI] = c;
       })());
 

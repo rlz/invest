@@ -1,5 +1,5 @@
 export function plural (n: number, form0: string, form1: string, form2: string): string {
-  if (n % 10 == 1 && n % 100 != 11) {
+  if (n % 10 === 1 && n % 100 !== 11) {
     return form0;
   }
 
