@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import React from "react";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from '../stats/instrumentState';
 import { DayStats as DayState } from '../stats/stats';
@@ -111,9 +111,7 @@ export class HistoryBlock extends React.Component<Props, State> {
       <div className='bHistory'>
         <ResponsiveContainer width='100%' height={300}>
           <LineChart data={dayStats}>
-            <Line yAxisId='left' dataKey='totalRub' />
-            <Line yAxisId='left' dataKey='totalOwnRub' />
-            <Line yAxisId='right' dataKey='performance' />
+            <CartesianGrid stroke='#f5f5f5' />
             <XAxis
               dataKey='date'
               type='number'
@@ -121,10 +119,29 @@ export class HistoryBlock extends React.Component<Props, State> {
               scale='time'
               tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
             />
-            <YAxis yAxisId='left' />
-            <YAxis
-              yAxisId='right' orientation='right'
+            <YAxis />
+            <Line dataKey='totalRub' />
+            <Line dataKey='totalOwnRub' stroke='#d8c303' />
+            <Tooltip />
+          </LineChart>
+        </ResponsiveContainer>
+        <ResponsiveContainer width='100%' height={300}>
+          <LineChart data={dayStats}>
+            <CartesianGrid stroke='#f5f5f5' />
+            <XAxis
+              dataKey='date'
+              type='number'
+              domain={["dataMin", "dataMax"]}
+              scale='time'
+              tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
             />
+            <YAxis />
+            <Line dataKey={(p): number => p.performance * 100} name='За все время' stroke='#003f5c' />
+            <Line dataKey={(p): number => p.performance1 * 100} name='За день' stroke='#7a5195' />
+            <Line dataKey={(p): number => p.performance7 * 100} name='За 7 дней' stroke='#ef5675' />
+            <Line dataKey={(p): number => p.performance30 * 100} name='За 30 дней' stroke='#ffa600' />
+            <ReferenceLine y={0} />
+            <Tooltip />
           </LineChart>
         </ResponsiveContainer>
         <div>
