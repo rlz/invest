@@ -35,13 +35,19 @@ class App extends React.Component<{}, State> {
   render (): JSX.Element {
     const { instrumentsMap, ops, candles, activeTab } = this.state;
 
+    const topPanel = (
+      <TopPanelBlock
+        loading={this.state.loading}
+        activeTab={activeTab}
+        onTabClick={(tab): void => this.setState({ activeTab: tab })}
+        onReloadClick={(): void => { this.loadData(); }}
+      />
+    );
+
     if (!instrumentsMap || !ops || !candles) {
       return (
         <div className='cApp'>
-          <TopPanelBlock
-            activeTab={activeTab}
-            onTabClick={(tab): void => this.setState({ activeTab: tab })}
-          />
+          {topPanel}
           <div className='cApp-body' />
         </div>
       );
@@ -54,12 +60,7 @@ class App extends React.Component<{}, State> {
 
       return (
         <div className='cApp'>
-          <TopPanelBlock
-            activeTab={activeTab}
-            onTabClick={(tab): void => this.setState({ activeTab: tab })}
-            usdPrice={stats.usdPrice()}
-            eurPrice={stats.eurPrice()}
-          />
+          {topPanel}
           <div className='cApp-body'>
             <PortfolioBlock instruments={instrumentsMap} portfolio={portfolio} />
           </div>
@@ -69,12 +70,7 @@ class App extends React.Component<{}, State> {
 
     return (
       <div className='cApp'>
-        <TopPanelBlock
-          activeTab={activeTab}
-          onTabClick={(tab): void => this.setState({ activeTab: tab })}
-          usdPrice={stats.usdPrice()}
-          eurPrice={stats.eurPrice()}
-        />
+        {topPanel}
         <div className='cApp-body'>
           <HistoryBlock instruments={instrumentsMap} states={stats.timeline()} />
         </div>

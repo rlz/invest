@@ -1,3 +1,5 @@
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { c } from "../tools/react";
 import { Rub } from "../widgets/spans";
@@ -6,6 +8,8 @@ import "./topPanel.scss";
 interface Props {
   activeTab: "PF" | "TL";
   onTabClick: (tab: "PF" | "TL") => void;
+  onReloadClick: () => void;
+  loading: boolean;
   usdPrice?: number;
   eurPrice?: number;
 }
@@ -38,7 +42,11 @@ export class TopPanelBlock extends React.Component<Props> {
           Выйти
         </div>
         <div>
-          Обновить
+          {
+            this.props.loading ?
+              <FontAwesomeIcon icon={faSpinner} pulse /> :
+              <button onClick={this.props.onReloadClick}>Обновить</button>
+          }
         </div>
       </div>
     );

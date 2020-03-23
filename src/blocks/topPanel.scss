@@ -23,4 +23,15 @@
   div.spacer {
     flex-grow: 1;
   }
+
+  button {
+    font-size: 1rem;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+
+    &:active {
+      outline: none;
+    }
+  }
 }
