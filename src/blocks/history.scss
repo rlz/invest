@@ -2,4 +2,29 @@
   .total {
     font-weight: bold;
   }
+
+  .tooltip {
+    background-color: white;
+    border: solid black 1px;
+    padding: 0.5rem;
+    opacity: 0.8;
+
+    .date {
+      font-weight: bold;
+    }
+
+    table {
+      border-spacing: 0;
+
+      th {
+        font-weight: normal;
+        text-align: left;
+        padding-right: 1rem;
+      }
+
+      td {
+        text-align: right;
+      }
+    }
+  }
 }

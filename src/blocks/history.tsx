@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import React from "react";
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
+import { Currency } from '../api/common';
 import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from '../stats/instrumentState';
 import { DayStats as DayState } from '../stats/stats';
@@ -48,6 +49,37 @@ interface DayStat {
   performance1: number;
   performance7: number;
   performance30: number;
+}
+
+function makeDateTooltipRenderer (type: Currency | "PERCENT") {
+  return ({ active, label, payload }: TooltipProps): JSX.Element | undefined => {
+
+    if (!active || label === undefined || payload === undefined) {
+      return;
+    }
+
+    return (
+      <div className='tooltip'>
+        <div className='date'>{DateTime.fromMillis(label as number).toISODate()}</div>
+        <table>
+          <tbody>
+            {payload.map(p => (
+              <tr key={p.name}>
+                <th><span style={{ color: p.color }}>{p.name}</span></th>
+                <td>
+                  {
+                    type === "PERCENT" ?
+                      <Prc v={(p.value as number) / 100} /> :
+                      <Cur t={type} v={p.value as number} />
+                  }
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 }
 
 export class HistoryBlock extends React.Component<Props, State> {
@@ -120,9 +152,9 @@ export class HistoryBlock extends React.Component<Props, State> {
               tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
             />
             <YAxis />
-            <Line dataKey='totalRub' />
-            <Line dataKey='totalOwnRub' stroke='#d8c303' />
-            <Tooltip />
+            <Line name='Стоимость портфеля' dataKey='totalRub' stroke='#003f5c' />
+            <Line name='Инвестированно (выведено)' dataKey='totalOwnRub' stroke='#ffa600' />
+            <Tooltip content={makeDateTooltipRenderer("RUB")} />
           </LineChart>
         </ResponsiveContainer>
         <ResponsiveContainer width='100%' height={300}>
@@ -136,12 +168,12 @@ export class HistoryBlock extends React.Component<Props, State> {
               tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
             />
             <YAxis />
+            <ReferenceLine y={0} />
             <Line dataKey={(p): number => p.performance * 100} name='За все время' stroke='#003f5c' />
             <Line dataKey={(p): number => p.performance1 * 100} name='За день' stroke='#7a5195' />
             <Line dataKey={(p): number => p.performance7 * 100} name='За 7 дней' stroke='#ef5675' />
             <Line dataKey={(p): number => p.performance30 * 100} name='За 30 дней' stroke='#ffa600' />
-            <ReferenceLine y={0} />
-            <Tooltip />
+            <Tooltip content={makeDateTooltipRenderer("PERCENT")} />
           </LineChart>
         </ResponsiveContainer>
         <div>
