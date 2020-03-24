@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import React from 'react';
-import { Candle, loadCandles } from './api/candles';
+import { Candle, lastPrice, loadCandles } from './api/candles';
 import { Operation } from './api/common';
 import { InstrumentsMap, loadInstruments } from './api/instruments';
 import { loadOps } from './api/operations';
@@ -35,10 +35,20 @@ class App extends React.Component<{}, State> {
   render (): JSX.Element {
     const { instrumentsMap, ops, candles, activeTab } = this.state;
 
+    let usdPrice: number | undefined = undefined;
+    let eurPrice: number | undefined = undefined;
+
+    if (candles !== undefined) {
+      usdPrice = lastPrice(candles[USD_FIGI]);
+      eurPrice = lastPrice(candles[EUR_FIGI]);
+    }
+
     const topPanel = (
       <TopPanelBlock
         loading={this.state.loading}
         activeTab={activeTab}
+        usdPrice={usdPrice}
+        eurPrice={eurPrice}
         onTabClick={(tab): void => this.setState({ activeTab: tab })}
         onReloadClick={(): void => { this.loadData(); }}
       />
