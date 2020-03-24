@@ -199,19 +199,19 @@ export class Stats {
 
       for (const i of Object.values(portfolio)) {
         const candles = this.candles[i.figi];
-        const price = findPrice(candles, d);
+        const price = findPrice(candles, nd);
 
         if (price === undefined) {
-          console.log(i, candles, d);
+          console.log(i, candles, nextDay);
           throw Error("Can't find price");
         }
 
         i.price = price;
       }
 
-      const usdPrice = findPrice(this.candles[USD_FIGI], d);
+      const usdPrice = findPrice(this.candles[USD_FIGI], nd);
       if (usdPrice === undefined) throw Error("Can't find USD price");
-      const eurPrice = findPrice(this.candles[EUR_FIGI], d);
+      const eurPrice = findPrice(this.candles[EUR_FIGI], nd);
       if (eurPrice === undefined) throw Error("Can't find EUR price");
 
       dayStats.push({
