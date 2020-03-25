@@ -1,0 +1,17 @@
+.cCurrenciesSwitch {
+  display: inline-flex;
+  border: solid black 1px;
+  border-radius: 0.1rem;
+  margin: 0.5rem;
+
+  div {
+    padding: 0.5rem;
+    background-color: #D8D8D8;
+    cursor: pointer;
+
+    &.active {
+      background-color: white;
+      cursor: default;
+    }
+  }
+}

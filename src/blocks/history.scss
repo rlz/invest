@@ -3,6 +3,16 @@
     font-weight: bold;
   }
 
+  .portfolio {
+    >span {
+      margin: 0 1rem;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+
   .tooltip {
     background-color: white;
     border: solid black 1px;
