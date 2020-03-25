@@ -48,6 +48,12 @@ export function toEur (currency: Currency, amount: number, usdPrice: number, eur
   throw Error("Unknown currency");
 }
 
+export function toCur (toCur: Currency, fromCur: Currency, amount: number, usdPrice: number, eurPrice: number): number {
+  if (toCur === "RUB") return toRub(fromCur, amount, usdPrice, eurPrice);
+  if (toCur === "USD") return toUsd(fromCur, amount, usdPrice, eurPrice);
+  return toEur(fromCur, amount, usdPrice, eurPrice);
+}
+
 export class CurrenciesCalc {
   private usdCost: number
   private eurCost: number
@@ -59,22 +65,26 @@ export class CurrenciesCalc {
     this.eurCost = eurPrice;
   }
 
-  add (currency: Currency, amount: number): void {
+  add (currency: Currency, amount: number): CurrenciesCalc {
     if (currency === "RUB") this.rubTotal += amount;
     if (currency === "USD") this.rubTotal += amount * this.usdCost;
     if (currency === "EUR") this.rubTotal += amount * this.eurCost;
+    return this;
   }
 
-  addRub (amount: number): void {
+  addRub (amount: number): CurrenciesCalc {
     this.rubTotal += amount;
+    return this;
   }
 
-  addUsd (amount: number): void {
+  addUsd (amount: number): CurrenciesCalc {
     this.rubTotal += amount * this.usdCost;
+    return this;
   }
 
-  addEur (amount: number): void {
+  addEur (amount: number): CurrenciesCalc {
     this.rubTotal += amount * this.eurCost;
+    return this;
   }
 
   rub (): number {
@@ -87,5 +97,11 @@ export class CurrenciesCalc {
 
   eur (): number {
     return this.rubTotal / this.eurCost;
+  }
+
+  cur (c: Currency): number {
+    if (c === "RUB") return this.rub();
+    if (c === "USD") return this.usd();
+    return this.eur();
   }
 }
