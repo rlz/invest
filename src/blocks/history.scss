@@ -1,11 +1,22 @@
 .bHistory {
-  .total {
-    font-weight: bold;
+
+  .title {
+    margin-top: 0.5rem;
+
+    .date {
+      font-weight: bold;
+    }
+  }
+
+  .avail,
+  .own,
+  .portfolio {
+    font-weight: lighter;
   }
 
   .portfolio {
     >span {
-      margin: 0 1rem;
+      margin: 0 0.6rem;
 
       &:first-child {
         margin-left: 0;

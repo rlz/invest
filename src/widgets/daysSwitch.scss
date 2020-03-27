@@ -1,0 +1,38 @@
+.cDaysSwitch {
+  display: inline-flex;
+  margin: 1rem 0;
+
+  .all-time-switch {
+    display: flex;
+    margin-right: 1rem;
+    align-items: center;
+
+    .all-time-mark {
+      width: 1rem;
+      height: 1rem;
+      border: solid black 1px;
+      border-radius: 0.2rem;
+      margin-right: 0.5rem;
+
+      &.active {
+        background-color: #777777;
+      }
+    }
+  }
+
+  .radio-switch {
+    display: flex;
+    border: solid black 1px;
+    border-radius: 0.2rem;
+
+    div {
+      padding: 0.5rem;
+      cursor: pointer;
+
+      &.active {
+        background-color: #D8D8D8;
+        cursor: default;
+      }
+    }
+  }
+}

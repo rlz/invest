@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import React from "react";
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
 import { Currency } from '../api/common';
 import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from '../stats/instrumentState';
@@ -8,6 +8,7 @@ import { DayStats as DayState } from '../stats/stats';
 import { CurrenciesCalc, toCur, toRub } from '../tools/currencies';
 import { sortInstruments } from '../tools/instruments';
 import { CurrenciesSwitch } from '../widgets/currenciesSwitch';
+import { DaysSwitch } from '../widgets/daysSwitch';
 import { Cur, Prc, Rub } from '../widgets/spans';
 import './history.scss';
 
@@ -17,6 +18,11 @@ interface Props {
 }
 
 interface State {
+  drawAllTime: boolean;
+  drawDay1: boolean;
+  drawDay7: boolean;
+  drawDay30: boolean;
+
   currency: Currency;
   expandedDays: ReadonlySet<string>;
 }
@@ -89,6 +95,11 @@ export class HistoryBlock extends React.Component<Props, State> {
     super(props);
 
     this.state = {
+      drawAllTime: true,
+      drawDay1: false,
+      drawDay7: false,
+      drawDay30: true,
+
       currency: "RUB",
       expandedDays: new Set()
     };
@@ -153,8 +164,8 @@ export class HistoryBlock extends React.Component<Props, State> {
       };
     });
 
-    const reverseDayStates = [...dayStates].reverse();
-    const reverseDayStats = [...dayStats].reverse();
+    const reverseDayStates = [...dayStates].reverse().slice(0, 100);
+    const reverseDayStats = [...dayStats].reverse().slice(0, 100);
 
     return (
       <div className='bHistory'>
@@ -180,9 +191,19 @@ export class HistoryBlock extends React.Component<Props, State> {
               dataKey='totalOwnCur'
               stroke='#ffa600'
             />
-            <Tooltip content={makeDateTooltipRenderer("RUB")} />
+            <Tooltip content={makeDateTooltipRenderer(this.state.currency)} />
+            <Legend />
           </LineChart>
         </ResponsiveContainer>
+        <DaysSwitch
+          drawAllTime={this.state.drawAllTime}
+          drawDay1={this.state.drawDay1}
+          drawDay7={this.state.drawDay7}
+          drawDay30={this.state.drawDay30}
+
+          setFlags={(a, d1, d7, d30): void =>
+            this.setState({ drawAllTime: a, drawDay1: d1, drawDay7: d7, drawDay30: d30 })}
+        />
         <ResponsiveContainer width='100%' height={300}>
           <LineChart data={dayStats}>
             <CartesianGrid stroke='#f5f5f5' />
@@ -195,11 +216,20 @@ export class HistoryBlock extends React.Component<Props, State> {
             />
             <YAxis />
             <ReferenceLine y={0} />
-            <Line dataKey={(p): number => p.performance * 100} name='За все время' stroke='#003f5c' />
-            <Line dataKey={(p): number => p.performance1 * 100} name='За день' stroke='#7a5195' />
-            <Line dataKey={(p): number => p.performance7 * 100} name='За 7 дней' stroke='#ef5675' />
-            <Line dataKey={(p): number => p.performance30 * 100} name='За 30 дней' stroke='#ffa600' />
+            {this.state.drawAllTime ?
+              <Line dataKey={(p): number => p.performance * 100} name='За все время' stroke='#003f5c' /> :
+              undefined}
+            {this.state.drawDay1 ?
+              <Line dataKey={(p): number => p.performance1 * 100} name='За день' stroke='#7a5195' /> :
+              undefined}
+            {this.state.drawDay7 ?
+              <Line dataKey={(p): number => p.performance7 * 100} name='За 7 дней' stroke='#ef5675' /> :
+              undefined}
+            {this.state.drawDay30 ?
+              <Line dataKey={(p): number => p.performance30 * 100} name='За 30 дней' stroke='#ffa600' /> :
+              undefined}
             <Tooltip content={makeDateTooltipRenderer("PERCENT")} />
+            <Legend />
           </LineChart>
         </ResponsiveContainer>
         <div>
@@ -222,8 +252,8 @@ export class HistoryBlock extends React.Component<Props, State> {
 
     return (
       <div className='dayStats'>
-        <div className='date'>
-          {DateTime.fromJSDate(dayState.date).toISODate()}{' '}
+        <div className='title'>
+          <span className='date'>{DateTime.fromJSDate(dayState.date).toISODate()}</span>{' '}
           USD: <Rub v={dayState.usdPrice} />{' '}
           EUR: <Rub v={dayState.eurPrice} />
         </div>
