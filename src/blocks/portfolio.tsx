@@ -9,6 +9,7 @@ import { Portfolio } from '../stats/portfolio';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
 import { sortInstruments } from "../tools/instruments";
 import { plural } from '../tools/lang';
+import { opQuantity } from '../tools/operations';
 import { Cur, Eur, Prc, Rub, Usd } from "../widgets/spans";
 import './portfolio.scss';
 
@@ -138,9 +139,13 @@ export class PortfolioBlock extends React.Component<Props, State> {
 
     for (const op of i.ops) {
       if (op.operationType.startsWith("Buy")) {
-        effect -= op.price * op.quantity;
+        const q = opQuantity(op);
+        if (q === undefined) throw Error("undefined quantity");
+        effect -= op.price * q;
       } else if (op.operationType === "Sell") {
-        effect += op.price * op.quantity;
+        const q = opQuantity(op);
+        if (q === undefined) throw Error("undefined quantity");
+        effect += op.price * q;
       } else if (op.operationType === "Dividend") {
         effect += op.payment;
       }
@@ -238,14 +243,17 @@ export class PortfolioBlock extends React.Component<Props, State> {
         "Sell": <span><FontAwesomeIcon icon={faWallet} /> <FontAwesomeIcon icon={faAngleRight} /></span>
       }[op.operationType as unknown as "Buy" | "BuyCard" | "Sell"];
 
+      const q = opQuantity(op);
+      if (q === undefined) throw Error("undefined quantity");
+
       return (
         <tr key={`${i.figi}-op-${op.date}-${op.id}`} className='op-line'>
           <td>{DateTime.fromISO(op.date).toISODate()} {opName}</td>
           <td>
-            {op.quantity} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
-            = <Cur t={op.currency} v={op.quantity * op.price} />
+            {q} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
+            = <Cur t={op.currency} v={q * op.price} />
           </td>
-          {this.renderAllCurrenciesColumns(op.currency, op.quantity * op.price, usdPrice, eurPrice)}
+          {this.renderAllCurrenciesColumns(op.currency, q * op.price, usdPrice, eurPrice)}
         </tr>
       );
     }

@@ -22,6 +22,7 @@ export async function loadOps (): Promise<Operation[]> {
   const data = await resp.json() as OpsResponse;
 
   const ops = data.payload.operations;
+
   ops.sort((o1, o2) => {
     const d1 = new Date(o1.date);
     const d2 = new Date(o2.date);
@@ -33,5 +34,6 @@ export async function loadOps (): Promise<Operation[]> {
     }
     return 0;
   });
-  return data.payload.operations;
+
+  return ops;
 }

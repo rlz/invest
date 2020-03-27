@@ -58,12 +58,12 @@ export interface Trade {
 export interface Operation {
   id: string;
   status: "Done" | "Decline" | "Progress";
-  trades?: unknown[];
+  trades?: Trade[];
   commission?: MoneyAmount;
   currency: Currency;
   payment: number;
   price: number;
-  quantity: number;
+  quantity?: number;
   figi?: string;
   instrumentType?: InstrumentType;
   isMarginCall?: boolean;

@@ -2,6 +2,7 @@ import { deepCopy } from 'deep-copy-ts';
 import { Candle, findPrice, lastPrice } from '../api/candles';
 import { Operation } from '../api/common';
 import { Instrument, InstrumentsMap } from '../api/instruments';
+import { opQuantity } from '../tools/operations';
 import { InstrumentState } from './instrumentState';
 import { Portfolio } from './portfolio';
 
@@ -130,11 +131,16 @@ export class Stats {
 
         stats[op.currency.toLowerCase() as "rub" | "usd" | "eur"] += op.payment;
 
-        const { figi, quantity } = op;
+        const { figi } = op;
+        const quantity = opQuantity(op);
 
         if (op.operationType === "Buy" || op.operationType === "BuyCard") {
           if (figi === undefined) {
             throw Error("undefined in op figi");
+          }
+
+          if (quantity === undefined) {
+            throw Error("undefined in op quantity");
           }
 
           if (figi === USD_FIGI) {
@@ -161,6 +167,10 @@ export class Stats {
         if (op.operationType === "Sell") {
           if (figi === undefined) {
             throw Error("undefined in op figi");
+          }
+
+          if (quantity === undefined) {
+            throw Error("undefined in op quantity");
           }
 
           if (figi === USD_FIGI) {
@@ -243,11 +253,16 @@ export class Stats {
         result.eur += op.payment;
       }
 
-      const { figi, quantity } = op;
+      const { figi } = op;
+      const quantity = opQuantity(op);
 
       if (op.operationType === "Buy" || op.operationType === "BuyCard") {
         if (figi === undefined) {
           throw Error("undefined in op figi");
+        }
+
+        if (quantity === undefined) {
+          throw Error("undefined in op quantity");
         }
 
         if (figi === USD_FIGI) {
@@ -275,6 +290,10 @@ export class Stats {
       if (op.operationType === "Sell") {
         if (figi === undefined) {
           throw Error("undefined in op figi");
+        }
+
+        if (quantity === undefined) {
+          throw Error("undefined in op quantity");
         }
 
         if (figi === USD_FIGI) {
