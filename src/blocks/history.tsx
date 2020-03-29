@@ -201,7 +201,7 @@ export class HistoryBlock extends React.Component<Props, State> {
       .addRub(dayState.ownRub).addUsd(dayState.ownUsd).addEur(dayState.ownEur).cur(this.state.currency);
 
     return (
-      <div className='dayStats'>
+      <div key={`day-${dayState.date.toISOString()}`} className='dayStats'>
         <div className='title'>
           <span className='date'>{DateTime.fromJSDate(dayState.date).toISODate()}</span>{' '}
           USD: <Rub v={dayState.usdPrice} />{' '}

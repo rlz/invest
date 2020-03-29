@@ -5,8 +5,6 @@ import "uplot/dist/uPlot.min.css";
 import { Currency } from '../api/common';
 import { fNum } from './spans';
 
-// const componentCounter = 0;
-
 type ValType = Currency | "PERCENT";
 interface SeriaOpts {
   label: string;
@@ -168,11 +166,6 @@ class Graph<P extends Props> extends React.Component<P> {
 
     this.uplot.setSize({ width: this.el.clientWidth, height: 300 });
   };
-
-  constructor(props: P) {
-    super(props);
-    // this.id = componentCounter++;
-  }
 
   componentDidMount (): void {
     if (this.el === null) throw Error("No element?");

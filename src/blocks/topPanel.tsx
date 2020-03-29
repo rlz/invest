@@ -16,10 +16,6 @@ interface Props {
 }
 
 export class TopPanelBlock extends React.Component<Props> {
-  constructor(props: Props) {
-    super(props);
-  }
-
   render (): JSX.Element {
     const { activeTab, usdPrice, eurPrice, onTabClick } = this.props;
 
