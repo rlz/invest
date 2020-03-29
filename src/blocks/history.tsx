@@ -1,14 +1,17 @@
+import { faAngleDown, faAngleUp } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { DateTime } from 'luxon';
 import React from "react";
-import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from 'recharts';
-import { Currency } from '../api/common';
-import { InstrumentsMap } from '../api/instruments';
+import { Currency, Operation } from '../api/common';
+import { Instrument, InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from '../stats/instrumentState';
 import { DayStats as DayState } from '../stats/stats';
 import { CurrenciesCalc, toCur, toRub } from '../tools/currencies';
 import { sortInstruments } from '../tools/instruments';
+import { c } from '../tools/react';
 import { CurrenciesSwitch } from '../widgets/currenciesSwitch';
 import { DaysSwitch } from '../widgets/daysSwitch';
+import { Graph1, Graph2 } from '../widgets/graph';
 import { Cur, Prc, Rub } from '../widgets/spans';
 import './history.scss';
 
@@ -57,37 +60,6 @@ interface DayStat {
   performance1: number;
   performance7: number;
   performance30: number;
-}
-
-function makeDateTooltipRenderer (type: Currency | "PERCENT") {
-  return ({ active, label, payload }: TooltipProps): JSX.Element | undefined => {
-
-    if (!active || label === undefined || payload === undefined) {
-      return;
-    }
-
-    return (
-      <div className='tooltip'>
-        <div className='date'>{DateTime.fromMillis(label as number).toISODate()}</div>
-        <table>
-          <tbody>
-            {payload.map(p => (
-              <tr key={p.name}>
-                <th><span style={{ color: p.color }}>{p.name}</span></th>
-                <td>
-                  {
-                    type === "PERCENT" ?
-                      <Prc v={(p.value as number) / 100} /> :
-                      <Cur t={type} v={p.value as number} />
-                  }
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
 }
 
 export class HistoryBlock extends React.Component<Props, State> {
@@ -167,34 +139,26 @@ export class HistoryBlock extends React.Component<Props, State> {
     const reverseDayStates = [...dayStates].reverse().slice(0, 100);
     const reverseDayStats = [...dayStats].reverse().slice(0, 100);
 
+    const perfLabel = this.state.drawDay1 ? "За день" : (this.state.drawDay7 ? "За 7 дней" : "За 30 дней");
+    const perfData = dayStats.map(
+      s => (this.state.drawDay1 ?
+        s.performance1 * 100 :
+        (this.state.drawDay7 ? (s.performance7 * 100) : (s.performance30 * 100)))
+    );
+
+    const { currency } = this.state;
+
     return (
       <div className='bHistory'>
-        <CurrenciesSwitch currency={this.state.currency} onCurSwitch={(currency): void => this.setState({ currency })} />
-        <ResponsiveContainer width='100%' height={300}>
-          <LineChart data={dayStats}>
-            <CartesianGrid stroke='#f5f5f5' />
-            <XAxis
-              dataKey='date'
-              type='number'
-              domain={["dataMin", "dataMax"]}
-              scale='time'
-              tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
-            />
-            <YAxis />
-            <Line
-              name='Стоимость портфеля'
-              dataKey='totalCur'
-              stroke='#003f5c'
-            />
-            <Line
-              name='Инвестированно (выведено)'
-              dataKey='totalOwnCur'
-              stroke='#ffa600'
-            />
-            <Tooltip content={makeDateTooltipRenderer(this.state.currency)} />
-            <Legend />
-          </LineChart>
-        </ResponsiveContainer>
+        <CurrenciesSwitch currency={currency} onCurSwitch={(currency): void => this.setState({ currency })} />
+        <h1>Стоимость портфеля и вложения</h1>
+        <Graph2
+          timestamps={dayStats.map(s => s.date / 1000)}
+          valType={currency}
+          s1={{ label: "Стоимость портфеля", data: dayStats.map(s => s.totalCur) }}
+          s2={{ label: "Инвестированно (выведено)", data: dayStats.map(s => s.totalOwnCur) }}
+        />
+        <h1>Доходы и потери</h1>
         <DaysSwitch
           drawAllTime={this.state.drawAllTime}
           drawDay1={this.state.drawDay1}
@@ -204,34 +168,20 @@ export class HistoryBlock extends React.Component<Props, State> {
           setFlags={(a, d1, d7, d30): void =>
             this.setState({ drawAllTime: a, drawDay1: d1, drawDay7: d7, drawDay30: d30 })}
         />
-        <ResponsiveContainer width='100%' height={300}>
-          <LineChart data={dayStats}>
-            <CartesianGrid stroke='#f5f5f5' />
-            <XAxis
-              dataKey='date'
-              type='number'
-              domain={["dataMin", "dataMax"]}
-              scale='time'
-              tickFormatter={(t: number): string => DateTime.fromMillis(t).toISODate()}
+        {
+          this.state.drawAllTime ?
+            <Graph2
+              timestamps={dayStats.map(s => s.date / 1000)}
+              valType='PERCENT'
+              s1={{ label: perfLabel, data: perfData }}
+              s2={{ label: "За все время", data: dayStats.map(s => s.performance * 100) }}
+            /> :
+            <Graph1
+              timestamps={dayStats.map(s => s.date / 1000)}
+              valType='PERCENT'
+              s1={{ label: perfLabel, data: perfData }}
             />
-            <YAxis />
-            <ReferenceLine y={0} />
-            {this.state.drawAllTime ?
-              <Line dataKey={(p): number => p.performance * 100} name='За все время' stroke='#003f5c' /> :
-              undefined}
-            {this.state.drawDay1 ?
-              <Line dataKey={(p): number => p.performance1 * 100} name='За день' stroke='#7a5195' /> :
-              undefined}
-            {this.state.drawDay7 ?
-              <Line dataKey={(p): number => p.performance7 * 100} name='За 7 дней' stroke='#ef5675' /> :
-              undefined}
-            {this.state.drawDay30 ?
-              <Line dataKey={(p): number => p.performance30 * 100} name='За 30 дней' stroke='#ffa600' /> :
-              undefined}
-            <Tooltip content={makeDateTooltipRenderer("PERCENT")} />
-            <Legend />
-          </LineChart>
-        </ResponsiveContainer>
+        }
         <div>
           {reverseDayStates.map((s, i) => this.renderDayStats(s, reverseDayStats[i]))}
         </div>
@@ -240,7 +190,7 @@ export class HistoryBlock extends React.Component<Props, State> {
   }
 
   renderDayStats (dayState: DayState, dayStat: DayStat): JSX.Element {
-    const expanded = this.state.expandedDays.has(dayState.date.toISOString()) ? " expanded" : "";
+    const expanded = this.state.expandedDays.has(dayState.date.toISOString());
 
     const portfolio = sortInstruments(dayState.portfolio, this.props.instruments, dayState.usdPrice, dayState.eurPrice);
 
@@ -275,12 +225,26 @@ export class HistoryBlock extends React.Component<Props, State> {
           {' '}За 7 дней: <Prc v={dayStat.performance7} color />
           {' '}За 30 дней: <Prc v={dayStat.performance30} color />
         </div>
-        {/* <div
-          className={'cApp-ops-expander' + expanded}
-          onClick={(): void => this.flipExpandedDay(dayStats.date)}
-        >{dayStats.ops.length} operations
+        <div
+          className={c('ops-expander', [expanded, "expanded"])}
+          onClick={(): void => this.flipExpandedDay(dayState.date)}
+        >
+          {dayState.ops.length} операций
+          {dayState.ops.length > 0 ?
+            <button onClick={(): void => this.flipExpandedDay(dayState.date)}>
+              {expanded ?
+                <span><FontAwesomeIcon icon={faAngleUp} /> скрыть</span> :
+                <span><FontAwesomeIcon icon={faAngleDown} /> показать</span>}
+            </button> :
+            undefined}
         </div>
-        <div className={'cApp-ops' + expanded}>{dayStats.ops.map((op, i) => <div key={i}>{JSON.stringify(op)}</div>)}</div> */}
+        {
+          expanded ?
+            <div className='ops'>
+              {dayState.ops.map((op, i) => this.renderOp(op, i.toString()))}
+            </div> :
+            undefined
+        }
       </div>
     );
   }
@@ -294,6 +258,18 @@ export class HistoryBlock extends React.Component<Props, State> {
         {info.ticker}({instrument.amount}):{' '}
         <Cur t={cur} v={toCur(cur, instrument.currency, instrument.price * instrument.amount, usdPrice, eurPrice)} />
       </span>
+    );
+  }
+
+  renderOp (op: Operation, key: string): JSX.Element {
+    const opJson: Operation & { instrument?: Instrument } = { ...op };
+
+    if (opJson.figi !== undefined) {
+      opJson.instrument = this.props.instruments[opJson.figi];
+    }
+
+    return (
+      <pre key={key}>{JSON.stringify(opJson, undefined, 2)}</pre>
     );
   }
 

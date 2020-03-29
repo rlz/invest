@@ -1,4 +1,9 @@
 .bHistory {
+  h1 {
+    font-family: Roboto;
+    font-weight: bold;
+    font-size: 1.3rem;
+  }
 
   .title {
     margin-top: 0.5rem;
@@ -46,6 +51,32 @@
       td {
         text-align: right;
       }
+    }
+  }
+
+  .ops-expander {
+    font-weight: lighter;
+    font-size: 0.8rem;
+
+    button {
+      padding: 0;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: lighter;
+      font-family: Roboto;
+      margin-left: 0.5rem;
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  .ops {
+    pre {
+      margin: 0.3rem;
+      font-size: 0.8rem;
     }
   }
 }
