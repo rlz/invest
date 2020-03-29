@@ -12,4 +12,5 @@ export function setApiToken (token: string): void {
   localStorage.setItem(API_TOKEN_KEY, token);
 }
 
+// Токен отозван ;)
 // t._BX5KYSF1XAQtyxgXM3ZSQtjXwfDdDilN3sR9onivsGhrQ6N2tt-GGrcP7kLxy_fTVqN9Xk01qOjXC0qb_wp7g
