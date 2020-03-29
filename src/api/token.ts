@@ -1,2 +1,15 @@
-// curl -X GET "https://api-invest.tinkoff.ru/openapi/market/stocks" -H "accept: application/json" -H "Authorization: Bearer t.zwAazOugKJbz_n9QHB1u_RviL2_9ZwmZ0dL-861Bs2ReKArCBdNbYjw82bNVXybVNLl-ahQHr68OfFWZm1lIbw"
-export const API_TOKEN = 't._BX5KYSF1XAQtyxgXM3ZSQtjXwfDdDilN3sR9onivsGhrQ6N2tt-GGrcP7kLxy_fTVqN9Xk01qOjXC0qb_wp7g';
+const API_TOKEN_KEY = "API_TOKEN";
+
+export function apiToken (): string | null {
+  return localStorage.getItem(API_TOKEN_KEY);
+}
+
+export function clearApiToken (): void {
+  localStorage.removeItem(API_TOKEN_KEY);
+}
+
+export function setApiToken (token: string): void {
+  localStorage.setItem(API_TOKEN_KEY, token);
+}
+
+// t._BX5KYSF1XAQtyxgXM3ZSQtjXwfDdDilN3sR9onivsGhrQ6N2tt-GGrcP7kLxy_fTVqN9Xk01qOjXC0qb_wp7g

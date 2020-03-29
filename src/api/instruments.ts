@@ -1,5 +1,5 @@
 import { Currency, InstrumentType, OkResponse } from './common';
-import { API_TOKEN } from './token';
+import { apiToken } from './token';
 
 interface StocksResponse extends OkResponse {
   payload: {
@@ -28,7 +28,7 @@ async function load (type: string): Promise<Instrument[]> {
     headers: {
       accept: 'application/json',
       Authorization:
-        `Bearer ${API_TOKEN}`
+        `Bearer ${apiToken()}`
     }
   });
   const data = await resp.json() as StocksResponse;

@@ -9,6 +9,7 @@ interface Props {
   activeTab: "PF" | "TL";
   onTabClick: (tab: "PF" | "TL") => void;
   onReloadClick: () => void;
+  onLogoutClick: () => void;
   loading: boolean;
   usdPrice?: number;
   eurPrice?: number;
@@ -39,7 +40,7 @@ export class TopPanelBlock extends React.Component<Props> {
           USD: <Rub v={usdPrice ?? -1} /> EUR: <Rub v={eurPrice ?? -1} />
         </div>
         <div>
-          Выйти
+          <button onClick={this.props.onLogoutClick}>Выйти</button>
         </div>
         <div>
           {

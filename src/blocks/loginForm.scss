@@ -1,0 +1,42 @@
+.bLoginForm {
+  form {
+    margin: 10rem auto;
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+
+    input {
+      padding: 0.5rem;
+      font-size: 1.5rem;
+      border: solid black 1px;
+      border-radius: 0.3rem;
+      margin-bottom: 1rem;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+    button {
+      padding: 0.5rem;
+      font-size: 1.5rem;
+      border: solid black 1px;
+      border-radius: 0.3rem;
+      font-family: Roboto;
+      font-weight: bold;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #f0f0f0;
+      }
+
+      &:active {
+        background-color: white;
+      }
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+}

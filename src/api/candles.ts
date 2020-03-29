@@ -1,4 +1,4 @@
-import { API_TOKEN } from "./token";
+import { apiToken } from "./token";
 
 export interface Candle {
   o: number;
@@ -18,7 +18,7 @@ export async function loadCandles (figi: string, from: Date): Promise<Candle[]> 
       headers: {
         accept: 'application/json',
         Authorization:
-          `Bearer ${API_TOKEN}`
+          `Bearer ${apiToken()}`
       }
     }
   );

@@ -4,8 +4,10 @@ import { Candle, lastPrice, loadCandles } from './api/candles';
 import { Operation } from './api/common';
 import { InstrumentsMap, loadInstruments } from './api/instruments';
 import { loadOps } from './api/operations';
+import { apiToken, clearApiToken } from './api/token';
 import './App.scss';
 import { HistoryBlock } from './blocks/history';
+import { LoginForm } from './blocks/loginForm';
 import { PortfolioBlock } from './blocks/portfolio';
 import { TopPanelBlock } from './blocks/topPanel';
 import { EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
@@ -24,7 +26,7 @@ class App extends React.Component<{}, State> {
 
     this.state = {
       loading: false,
-      activeTab: "PF"
+      activeTab: "PF",
     };
   }
 
@@ -33,6 +35,10 @@ class App extends React.Component<{}, State> {
   }
 
   render (): JSX.Element {
+    if (apiToken() === null) {
+      return <LoginForm onLoggedIn={(): void => { this.loadData(); this.forceUpdate(); }} />;
+    }
+
     const { instrumentsMap, ops, candles, activeTab } = this.state;
 
     let usdPrice: number | undefined = undefined;
@@ -51,6 +57,10 @@ class App extends React.Component<{}, State> {
         eurPrice={eurPrice}
         onTabClick={(tab): void => this.setState({ activeTab: tab })}
         onReloadClick={(): void => { this.loadData(); }}
+        onLogoutClick={(): void => {
+          clearApiToken();
+          this.setState({ instrumentsMap: undefined, ops: undefined, candles: undefined });
+        }}
       />
     );
 
@@ -89,6 +99,10 @@ class App extends React.Component<{}, State> {
   }
 
   async loadData (): Promise<void> {
+    if (apiToken() === null) {
+      return;
+    }
+
     this.setState({ loading: true });
 
     try {

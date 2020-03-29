@@ -1,5 +1,5 @@
 import { OkResponse, Operation } from './common';
-import { API_TOKEN } from './token';
+import { apiToken } from './token';
 
 interface OpsResponse extends OkResponse {
   payload: {
@@ -16,7 +16,7 @@ export async function loadOps (): Promise<Operation[]> {
     headers: {
       accept: 'application/json',
       Authorization:
-        `Bearer ${API_TOKEN}`
+        `Bearer ${apiToken()}`
     }
   });
   const data = await resp.json() as OpsResponse;
