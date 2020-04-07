@@ -184,6 +184,7 @@ class Graph<P extends Props> extends React.Component<P> {
 
     const series: uPlot.Series[] = [
       {
+        label: "Дата",
         value: (_, timestamp): string => {
           const d = new Date(timestamp * 1000);
           return `${formatDate(d)} ${formatMonth(d)} ${formatYear(d)}`;
