@@ -11,7 +11,7 @@ import { sortInstruments } from '../tools/instruments';
 import { c } from '../tools/react';
 import { CurrenciesSwitch } from '../widgets/currenciesSwitch';
 import { DaysSwitch } from '../widgets/daysSwitch';
-import { Graph1, Graph2 } from '../widgets/graph';
+import { Graph } from '../widgets/graph';
 import { Cur, Prc, Rub } from '../widgets/spans';
 import './history.scss';
 
@@ -152,7 +152,7 @@ export class HistoryBlock extends React.Component<Props, State> {
       <div className='bHistory'>
         <CurrenciesSwitch currency={currency} onCurSwitch={(currency): void => this.setState({ currency })} />
         <h1>Стоимость портфеля и вложения</h1>
-        <Graph2
+        <Graph
           timestamps={dayStats.map(s => s.date / 1000)}
           valType={currency}
           s1={{ label: "Стоимость портфеля", data: dayStats.map(s => s.totalCur) }}
@@ -170,13 +170,13 @@ export class HistoryBlock extends React.Component<Props, State> {
         />
         {
           this.state.drawAllTime ?
-            <Graph2
+            <Graph
               timestamps={dayStats.map(s => s.date / 1000)}
               valType='PERCENT'
               s1={{ label: perfLabel, data: perfData }}
               s2={{ label: "За все время", data: dayStats.map(s => s.performance * 100) }}
             /> :
-            <Graph1
+            <Graph
               timestamps={dayStats.map(s => s.date / 1000)}
               valType='PERCENT'
               s1={{ label: perfLabel, data: perfData }}

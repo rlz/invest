@@ -156,13 +156,14 @@ function formatValLong (val: number, type: ValType): string {
   return `${curSign} ${fNum(val)}`;
 }
 
-class Graph<P extends Props> extends React.Component<P> {
+export class Graph extends React.Component<Props> {
   // private id: number;
-  private uplot!: uPlot
+  private uplot: uPlot | null = null
   private el: HTMLDivElement | null = null
+  private interval: number | null = null
 
   private resizeListener = (): void => {
-    if (this.el === null) return;
+    if (this.el === null || this.uplot === null) return;
 
     this.uplot.setSize({ width: this.el.clientWidth, height: 300 });
   };
@@ -171,6 +172,21 @@ class Graph<P extends Props> extends React.Component<P> {
     if (this.el === null) throw Error("No element?");
 
     window.addEventListener("resize", this.resizeListener);
+
+    this.setupUPlot();
+
+    this.interval = window.setInterval(() => this.uplot?.syncRect(), 500);
+  }
+
+  setupUPlot (): void {
+    if (this.el === null) {
+      return;
+    }
+
+    if (this.uplot !== null) {
+      this.uplot.destroy();
+      this.uplot = null;
+    }
 
     const { s1, s2, s3, s4 } = this.props;
 
@@ -212,6 +228,7 @@ class Graph<P extends Props> extends React.Component<P> {
       width: this.el.clientWidth,
       height: 300,
       series,
+      fmtDate: () => (): string => '',
       axes: [
         {
           values: formatDateVals
@@ -226,29 +243,14 @@ class Graph<P extends Props> extends React.Component<P> {
   }
 
   componentDidUpdate (): void {
-    const { s1, s2, s3, s4 } = this.props;
-
-    const data = [
-      this.props.timestamps, s1.data
-    ];
-
-    if (s2 !== undefined) {
-      data.push(s2.data);
-    }
-
-    if (s3 !== undefined) {
-      data.push(s3.data);
-    }
-
-    if (s4 !== undefined) {
-      data.push(s4.data);
-    }
-
-    this.uplot.setData(data);
+    this.setupUPlot();
   }
 
   componentWillUnmount (): void {
     window.removeEventListener("resize", this.resizeListener);
+
+    if (this.interval !== null)
+      window.clearInterval(this.interval);
   }
 
   render (): JSX.Element {
@@ -257,20 +259,3 @@ class Graph<P extends Props> extends React.Component<P> {
     );
   }
 }
-
-interface Props1 {
-  timestamps: number[];
-  valType: ValType;
-  s1: SeriaOpts;
-}
-
-export class Graph1 extends Graph<Props1> { }
-
-interface Props2 {
-  timestamps: number[];
-  valType: ValType;
-  s1: SeriaOpts;
-  s2: SeriaOpts;
-}
-
-export class Graph2 extends Graph<Props2> { }
