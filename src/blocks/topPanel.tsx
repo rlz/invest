@@ -33,7 +33,8 @@ export class TopPanelBlock extends React.Component<Props> {
         </div>
         <div className='spacer' />
         <div>
-          USD: <Rub v={usdPrice ?? -1} /> EUR: <Rub v={eurPrice ?? -1} />
+          USD: {usdPrice === undefined ? "?" : <Rub v={usdPrice} />}{' '}
+          EUR: {eurPrice === undefined ? "?" : <Rub v={eurPrice} />}
         </div>
         <div>
           <button onClick={this.props.onLogoutClick}>Выйти</button>
