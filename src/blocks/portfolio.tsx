@@ -114,7 +114,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
     return [
       <tr key='ownMoney-th'>
         <th colSpan={2} className='th-first-line'>Инвестированно (выведено)</th>
-        <th colSpan={3} className='all-cur'>Итого</th>
+        <th colSpan={3} className='all-cur'>В разных валютах</th>
       </tr>,
       ownMoneyLine("RUB"),
       ownMoneyLine("USD"),
@@ -218,6 +218,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
       result.push(
         <tr key={`op-more-${i.figi}`}>
           <td colSpan={2}>...</td>
+          <td colSpan={3} className='all-cur' />
         </tr>
       );
     }
