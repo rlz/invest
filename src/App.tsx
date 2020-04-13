@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import React from 'react';
-import { Candle, lastPrice, loadCandles } from './api/candles';
+import { Candle, loadCandles } from './api/candles';
 import { Operation } from './api/common';
 import { InstrumentsMap, loadInstruments } from './api/instruments';
 import { loadOps } from './api/operations';
@@ -10,12 +10,13 @@ import { HistoryBlock } from './blocks/history';
 import { LoginForm } from './blocks/loginForm';
 import { PortfolioBlock } from './blocks/portfolio';
 import { TopPanelBlock } from './blocks/topPanel';
-import { EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
+import { DayStats, EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
 
 interface State {
   instrumentsMap?: InstrumentsMap;
   ops?: Operation[];
   candles?: { [figi: string]: Candle[] };
+  timeline?: DayStats[];
   loading: boolean;
   activeTab: "PF" | "TL";
 }
@@ -39,14 +40,15 @@ class App extends React.Component<{}, State> {
       return <LoginForm onLoggedIn={(): void => { this.loadData(); this.forceUpdate(); }} />;
     }
 
-    const { instrumentsMap, ops, candles, activeTab } = this.state;
+    const { instrumentsMap, timeline, activeTab } = this.state;
 
     let usdPrice: number | undefined = undefined;
     let eurPrice: number | undefined = undefined;
 
-    if (candles !== undefined) {
-      usdPrice = lastPrice(candles[USD_FIGI]);
-      eurPrice = lastPrice(candles[EUR_FIGI]);
+    if (timeline !== undefined && timeline.length > 0) {
+      const lastDay = timeline[timeline.length - 1];
+      usdPrice = lastDay.usdPrice;
+      eurPrice = lastDay.eurPrice;
     }
 
     const topPanel = (
@@ -64,7 +66,7 @@ class App extends React.Component<{}, State> {
       />
     );
 
-    if (!instrumentsMap || !ops || !candles) {
+    if (instrumentsMap === undefined || timeline === undefined) {
       return (
         <div className='cApp'>
           {topPanel}
@@ -73,16 +75,12 @@ class App extends React.Component<{}, State> {
       );
     }
 
-    const stats = new Stats(instrumentsMap, ops, candles);
-
     if (activeTab === "PF") {
-      const portfolio = stats.portfolio();
-
       return (
         <div className='cApp'>
           {topPanel}
           <div className='cApp-body'>
-            <PortfolioBlock instruments={instrumentsMap} portfolio={portfolio} />
+            <PortfolioBlock instruments={instrumentsMap} timeline={timeline} />
           </div>
         </div>
       );
@@ -92,7 +90,7 @@ class App extends React.Component<{}, State> {
       <div className='cApp'>
         {topPanel}
         <div className='cApp-body'>
-          <HistoryBlock instruments={instrumentsMap} states={stats.timeline()} />
+          <HistoryBlock instruments={instrumentsMap} states={timeline} />
         </div>
       </div>
     );
@@ -115,8 +113,6 @@ class App extends React.Component<{}, State> {
       const candlesLoadFrom = DateTime.fromISO(ops[0].date).minus({ hours: 7 * 24 }).toJSDate();
 
       for (const i of stats.allInstruments()) {
-        if (i.figi === USD_FIGI || i.figi === EUR_FIGI) continue;
-
         cPromises.push((async (): Promise<void> => {
           const c = await loadCandles(i.figi, candlesLoadFrom);
           candles[i.figi] = c;
@@ -135,7 +131,9 @@ class App extends React.Component<{}, State> {
 
       await Promise.all(cPromises);
 
-      this.setState({ instrumentsMap, ops, candles });
+      const timeline = new Stats(instrumentsMap, ops, candles).timeline();
+
+      this.setState({ instrumentsMap, ops, candles, timeline });
     } finally {
       this.setState({ loading: false });
     }

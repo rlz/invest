@@ -4,7 +4,6 @@ import { Operation } from '../api/common';
 import { Instrument, InstrumentsMap } from '../api/instruments';
 import { opQuantity } from '../tools/operations';
 import { InstrumentState } from './instrumentState';
-import { Portfolio } from './portfolio';
 
 const NoFigiOps = new Set(["PayIn", "Tax", "TaxBack", "PayOut", "MarginCommission"]);
 export const EUR_FIGI = "BBG0013HJJ31";
@@ -72,10 +71,12 @@ export class Stats {
         continue;
       }
 
-      if (typeof op.figi !== "string") {
+      if (op.figi === undefined) {
         console.log("Weird op figi", op);
         continue;
       }
+
+      if (op.figi === USD_FIGI || op.figi === EUR_FIGI) continue;
 
       if (!figi.has(op.figi)) {
         const i = this.instrumentsMap[op.figi];
@@ -157,10 +158,11 @@ export class Stats {
               amount: quantity,
               price: -1,
               currency,
-              ops: []
+              ops: [op]
             };
           } else {
             portfolio[figi].amount += quantity;
+            portfolio[figi].ops.push(op);
           }
         }
 
@@ -187,10 +189,11 @@ export class Stats {
               amount: -quantity,
               price: -1,
               currency,
-              ops: []
+              ops: [op]
             };
           } else {
             portfolio[figi].amount -= quantity;
+            portfolio[figi].ops.push(op);
           }
         }
 
@@ -202,6 +205,14 @@ export class Stats {
           } else {
             stats.ownEur += op.payment;
           }
+        }
+
+        if (op.operationType === "Dividend") {
+          if (figi === undefined) {
+            throw Error("undefined in op figi");
+          }
+
+          portfolio[figi].ops.push(op);
         }
 
         ops.push(op);
@@ -235,116 +246,6 @@ export class Stats {
     }
 
     return dayStats;
-  }
-
-  portfolio (): Portfolio {
-    const result = new Portfolio();
-
-    for (const op of this.ops) {
-      if (op.status !== "Done") {
-        continue;
-      }
-
-      if (op.currency === "RUB") {
-        result.rub += op.payment;
-      } else if (op.currency === "USD") {
-        result.usd += op.payment;
-      } else if (op.currency === "EUR") {
-        result.eur += op.payment;
-      }
-
-      const { figi } = op;
-      const quantity = opQuantity(op);
-
-      if (op.operationType === "Buy" || op.operationType === "BuyCard") {
-        if (figi === undefined) {
-          throw Error("undefined in op figi");
-        }
-
-        if (quantity === undefined) {
-          throw Error("undefined in op quantity");
-        }
-
-        if (figi === USD_FIGI) {
-          result.usd += quantity;
-        } else if (figi === EUR_FIGI) {
-          result.eur += quantity;
-        } else if (result.instruments[figi] === undefined) {
-          const currency = this.instrumentsMap[figi]?.currency;
-
-          if (currency === undefined) throw Error("Unknown instrument");
-
-          result.instruments[figi] = {
-            figi,
-            amount: quantity,
-            price: -1,
-            currency,
-            ops: [op]
-          };
-        } else {
-          result.instruments[figi].amount += quantity;
-          result.instruments[figi].ops.push(op);
-        }
-      }
-
-      if (op.operationType === "Sell") {
-        if (figi === undefined) {
-          throw Error("undefined in op figi");
-        }
-
-        if (quantity === undefined) {
-          throw Error("undefined in op quantity");
-        }
-
-        if (figi === USD_FIGI) {
-          result.usd -= quantity;
-        } else if (figi === EUR_FIGI) {
-          result.eur -= quantity;
-        } else if (result.instruments[figi] === undefined) {
-          const currency = this.instrumentsMap[figi]?.currency;
-
-          if (currency === undefined) throw Error("Unknown instrument");
-
-          result.instruments[figi] = {
-            figi,
-            amount: -quantity,
-            price: -1,
-            currency,
-            ops: [op]
-          };
-        } else {
-          result.instruments[figi].amount -= quantity;
-          result.instruments[figi].ops.push(op);
-        }
-      }
-
-      if (op.operationType === "PayIn" || op.operationType === "PayOut") {
-        if (op.currency === "RUB") {
-          result.ownRub += op.payment;
-        } else if (op.currency === "USD") {
-          result.ownUsd += op.payment;
-        } else {
-          result.ownEur += op.payment;
-        }
-      }
-
-      if (op.operationType === "Dividend") {
-        if (figi === undefined) {
-          throw Error("undefined in op figi");
-        }
-
-        result.instruments[figi].ops.push(op);
-      }
-    }
-
-    for (const i of Object.values(result.instruments)) {
-      i.price = lastPrice(this.candles[i.figi]);
-    }
-
-    result.usdPrice = lastPrice(this.candles[USD_FIGI]);
-    result.eurPrice = lastPrice(this.candles[EUR_FIGI]);
-
-    return result;
   }
 }
 

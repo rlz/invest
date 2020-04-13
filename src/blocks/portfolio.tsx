@@ -5,7 +5,7 @@ import React from "react";
 import { Currency, Operation } from '../api/common';
 import { InstrumentsMap } from '../api/instruments';
 import { InstrumentState } from "../stats/instrumentState";
-import { Portfolio } from '../stats/portfolio';
+import { DayStats } from '../stats/stats';
 import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
 import { sortInstruments } from "../tools/instruments";
 import { plural } from '../tools/lang';
@@ -15,7 +15,7 @@ import './portfolio.scss';
 
 interface Props {
   instruments: InstrumentsMap;
-  portfolio: Portfolio;
+  timeline: DayStats[];
 }
 
 interface State {
@@ -32,13 +32,18 @@ export class PortfolioBlock extends React.Component<Props, State> {
   }
 
   render (): JSX.Element {
-    const { portfolio, instruments } = this.props;
+    const { timeline, instruments } = this.props;
+    const portfolio = timeline[timeline.length - 1];
 
     const totalPortfolioCost = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice);
-    totalPortfolioCost.addRub(portfolio.totalRub());
-    for (const i of Object.values(portfolio.instruments)) {
+    totalPortfolioCost.addRub(portfolio.rub).addUsd(portfolio.usd).addEur(portfolio.eur);
+    for (const i of Object.values(portfolio.portfolio)) {
       totalPortfolioCost.add(i.currency, i.amount * i.price);
     }
+
+    const totalOwn = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice)
+      .addRub(portfolio.ownRub).addUsd(portfolio.ownUsd).addEur(portfolio.ownEur);
+
 
     return (
       <div className='bPortfolio'>
@@ -47,7 +52,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <Rub v={totalPortfolioCost.rub()} />
           <Usd v={totalPortfolioCost.usd()} />
           <Eur v={totalPortfolioCost.eur()} />
-          <Prc v={(totalPortfolioCost.rub() - portfolio.totalOwnRub()) / totalPortfolioCost.rub()} color />
+          <Prc v={(totalPortfolioCost.rub() - totalOwn.rub()) / totalPortfolioCost.rub()} color />
         </div>
         <table>
           <tbody>
@@ -57,7 +62,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
               <th colSpan={2} className='th-first-line'>Инструменты</th>
               {this.renderEmptyAllCurrenciesColumns()}
             </tr>
-            {sortInstruments(portfolio.instruments, instruments, portfolio.usdPrice, portfolio.eurPrice)
+            {sortInstruments(portfolio.portfolio, instruments, portfolio.usdPrice, portfolio.eurPrice)
               .map(i => this.renderInstrument(i, portfolio.usdPrice, portfolio.eurPrice))}
           </tbody>
         </table>
@@ -65,7 +70,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
     );
   }
 
-  renderAvailable (portfolio: Portfolio): JSX.Element[] {
+  renderAvailable (portfolio: DayStats): JSX.Element[] {
     const availLine = (c: Currency): JSX.Element => {
       let v = portfolio.rub;
       if (c === "USD") v = portfolio.usd;
@@ -80,6 +85,9 @@ export class PortfolioBlock extends React.Component<Props, State> {
       );
     };
 
+    const total = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice)
+      .addRub(portfolio.rub).addUsd(portfolio.usd).addEur(portfolio.eur);
+
     return [
       <tr key='available-th'>
         <th colSpan={2} className='th-first-line'>Доступно</th>
@@ -92,12 +100,12 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <th colSpan={2}>
           Всего
         </th>
-        {this.renderAllCurrenciesColumns("RUB", portfolio.totalRub(), portfolio.usdPrice, portfolio.eurPrice)}
+        {this.renderAllCurrenciesColumns("RUB", total.rub(), portfolio.usdPrice, portfolio.eurPrice)}
       </tr>
     ];
   }
 
-  renderOwnMoney (portfolio: Portfolio): JSX.Element[] {
+  renderOwnMoney (portfolio: DayStats): JSX.Element[] {
     const ownMoneyLine = (c: Currency): JSX.Element => {
       const ownMoneyCase = { "RUB": "ownRub", "USD": "ownUsd", "EUR": "ownEur" }[c];
       const v = (portfolio as unknown as { [_: string]: number })[ownMoneyCase];
@@ -111,6 +119,9 @@ export class PortfolioBlock extends React.Component<Props, State> {
       );
     };
 
+    const totalOwn = new CurrenciesCalc(portfolio.usdPrice, portfolio.eurPrice)
+      .addRub(portfolio.ownRub).addUsd(portfolio.ownUsd).addEur(portfolio.ownEur);
+
     return [
       <tr key='ownMoney-th'>
         <th colSpan={2} className='th-first-line'>Инвестированно (выведено)</th>
@@ -123,7 +134,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <th colSpan={2}>
           Всего
         </th>
-        {this.renderAllCurrenciesColumns("RUB", portfolio.totalOwnRub(), portfolio.usdPrice, portfolio.eurPrice)}
+        {this.renderAllCurrenciesColumns("RUB", totalOwn.rub(), portfolio.usdPrice, portfolio.eurPrice)}
       </tr>
     ];
   }
