@@ -8,7 +8,7 @@ import { apiToken, clearApiToken } from './api/token';
 import './App.scss';
 import { HistoryBlock } from './blocks/history';
 import { LoginForm } from './blocks/loginForm';
-import { PortfolioBlock } from './blocks/portfolio';
+import { PortfolioBlock } from './blocks/portfolio/portfolio';
 import { TopPanelBlock } from './blocks/topPanel';
 import { DayStats, EUR_FIGI, Stats, USD_FIGI } from './stats/stats';
 

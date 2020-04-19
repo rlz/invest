@@ -5,8 +5,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.min.css';
 import uPlot from 'uplot';
 import "uplot/dist/uPlot.min.css";
-import { DayStats } from '../stats/stats';
-import { CurrenciesCalc } from '../tools/currencies';
+import { DayStats } from '../../stats/stats';
+import { CurrenciesCalc } from '../../tools/currencies';
 import "./dateRangeSelector.scss";
 
 interface Props {

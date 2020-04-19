@@ -2,14 +2,14 @@ import { faAngleRight, faChevronDown, faChevronUp, faCoins, faWallet } from "@fo
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DateTime } from "luxon";
 import React from "react";
-import { Currency, Operation } from "../api/common";
-import { InstrumentsMap } from '../api/instruments';
-import { InstrumentState } from '../stats/instrumentState';
-import { DayStats } from '../stats/stats';
-import { toEur, toRub, toUsd } from '../tools/currencies';
-import { plural } from "../tools/lang";
-import { opQuantity } from "../tools/operations";
-import { Cur, Eur, Rub, Usd } from "./spans";
+import { Operation } from "../../api/common";
+import { InstrumentsMap } from '../../api/instruments';
+import { InstrumentState } from '../../stats/instrumentState';
+import { DayStats } from '../../stats/stats';
+import { plural } from "../../tools/lang";
+import { opQuantity } from "../../tools/operations";
+import { Cur } from "../../widgets/spans";
+import { CurrenciesColumns, EmptyCurrenciesColunms } from "./currenciesColumns";
 
 interface Props {
   instruments: InstrumentsMap;
@@ -69,14 +69,25 @@ export class Instrument extends React.Component<Props, State> {
           {instrumentInfo.name}
         </td>
         <td>{i.amount} {'\xD7'} <Cur t={i.currency} v={i.price} /> = <Cur t={i.currency} v={i.amount * i.price} /></td>
-        {this.renderAllCurrenciesColumns(i.currency, i.price * i.amount, curDay.usdPrice, curDay.eurPrice)}
+        <CurrenciesColumns
+          cur={i.currency}
+          amount={i.price * i.amount}
+          usdPrice={curDay.usdPrice}
+          eurPrice={curDay.eurPrice}
+        />
       </tr>,
       <tr key={i.figi + "-sl"} className='inst-ticker-line'>
         <td className='ticker'>
           {instrumentInfo.ticker}
         </td>
         <td><Cur t={i.currency} v={effect} color /></td>
-        {this.renderAllCurrenciesColumns(i.currency, effect, curDay.usdPrice, curDay.eurPrice, true)}
+        <CurrenciesColumns
+          cur={i.currency}
+          amount={effect}
+          usdPrice={curDay.usdPrice}
+          eurPrice={curDay.eurPrice}
+          color
+        />
       </tr>
     ];
 
@@ -89,7 +100,7 @@ export class Instrument extends React.Component<Props, State> {
               <FontAwesomeIcon icon={faChevronUp} /> Скрыть
             </button>
           </td>
-          {this.renderEmptyAllCurrenciesColumns()}
+          <EmptyCurrenciesColunms />
         </tr>
       );
 
@@ -110,7 +121,12 @@ export class Instrument extends React.Component<Props, State> {
               <Cur t={is.currency} v={is.price} />{' '}
               = <Cur t={is.currency} v={is.amount * is.price} />
             </td>
-            {this.renderAllCurrenciesColumns(is.currency, is.amount * is.price, initDay.usdPrice, initDay.eurPrice)}
+            <CurrenciesColumns
+              cur={is.currency}
+              amount={is.price * is.amount}
+              usdPrice={curDay.usdPrice}
+              eurPrice={curDay.eurPrice}
+            />
           </tr>
         );
       }
@@ -118,7 +134,7 @@ export class Instrument extends React.Component<Props, State> {
       result.push(
         <tr key={`expand-${i.figi}`}>
           <td colSpan={2}>1 операция</td>
-          {this.renderEmptyAllCurrenciesColumns()}
+          <EmptyCurrenciesColunms />
         </tr>
       );
       result.push(
@@ -133,7 +149,7 @@ export class Instrument extends React.Component<Props, State> {
               <FontAwesomeIcon icon={faChevronDown} /> Показать все
             </button>
           </td>
-          {this.renderEmptyAllCurrenciesColumns()}
+          <EmptyCurrenciesColunms />
         </tr>
       );
       result.push(
@@ -148,24 +164,6 @@ export class Instrument extends React.Component<Props, State> {
     }
 
     return result;
-  }
-
-  renderAllCurrenciesColumns (
-    cur: Currency, amount: number, usdPrice: number, eurPrice: number, color?: boolean
-  ): JSX.Element[] {
-    return [
-      <td key='total-rub' className='all-cur'><Rub v={toRub(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
-      <td key='total-usd' className='all-cur'><Usd v={toUsd(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
-      <td key='total-eur' className='all-cur'><Eur v={toEur(cur, amount, usdPrice, eurPrice)} color={color} /></td>
-    ];
-  }
-
-  renderEmptyAllCurrenciesColumns (): JSX.Element[] {
-    return [
-      <td key='total-rub' className='all-cur' />,
-      <td key='total-usd' className='all-cur' />,
-      <td key='total-eur' className='all-cur' />
-    ];
   }
 
   renderOperation (i: InstrumentState, op: Operation, usdPrice: number, eurPrice: number): JSX.Element {
@@ -186,7 +184,12 @@ export class Instrument extends React.Component<Props, State> {
             {q} {'\xD7'} <Cur t={op.currency} v={op.price} />{' '}
             = <Cur t={op.currency} v={q * op.price} />
           </td>
-          {this.renderAllCurrenciesColumns(op.currency, q * op.price, usdPrice, eurPrice)}
+          <CurrenciesColumns
+            cur={op.currency}
+            amount={q * op.price}
+            usdPrice={usdPrice}
+            eurPrice={eurPrice}
+          />
         </tr>
       );
     }
@@ -196,7 +199,12 @@ export class Instrument extends React.Component<Props, State> {
         <tr key={`${i.figi}-op-${op.date}-${op.id}`} className='op-line'>
           <td>{DateTime.fromISO(op.date).toISODate()} <FontAwesomeIcon icon={faCoins} /></td>
           <td><Cur t={op.currency} v={op.payment} /></td>
-          {this.renderAllCurrenciesColumns(op.currency, op.payment, usdPrice, eurPrice)}
+          <CurrenciesColumns
+            cur={op.currency}
+            amount={op.payment}
+            usdPrice={usdPrice}
+            eurPrice={eurPrice}
+          />
         </tr>
       );
     }

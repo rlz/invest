@@ -1,13 +1,14 @@
 import { DateTime, Duration } from "luxon";
 import React from "react";
-import { Currency } from '../api/common';
-import { InstrumentsMap } from '../api/instruments';
-import { DayStats } from '../stats/stats';
-import { CurrenciesCalc, toEur, toRub, toUsd } from '../tools/currencies';
-import { sortInstruments } from "../tools/instruments";
-import { DateRangeSelector } from "../widgets/dateRangeSelector";
-import { Instrument } from "../widgets/instrument";
-import { Cur, Eur, Prc, Rub, Usd } from "../widgets/spans";
+import { Currency } from '../../api/common';
+import { InstrumentsMap } from '../../api/instruments';
+import { DayStats } from '../../stats/stats';
+import { CurrenciesCalc } from '../../tools/currencies';
+import { sortInstruments } from "../../tools/instruments";
+import { Cur, Eur, Prc, Rub, Usd } from "../../widgets/spans";
+import { CurrenciesColumns, EmptyCurrenciesColunms } from './currenciesColumns';
+import { DateRangeSelector } from "./dateRangeSelector";
+import { Instrument } from "./instrument";
 import './portfolio.scss';
 
 interface Props {
@@ -90,7 +91,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
             {this.renderAvailable(current)}
             <tr>
               <th colSpan={2} className='th-first-line'>Инструменты</th>
-              {this.renderEmptyAllCurrenciesColumns()}
+              <EmptyCurrenciesColunms />
             </tr>
             {sortInstruments(current.portfolio, instruments, current.usdPrice, current.eurPrice)
               .map(i => <Instrument key={i.figi} instruments={instruments} i={i} initDay={initial} curDay={current} />)}
@@ -110,7 +111,12 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <td colSpan={2}>
             <Cur t={c} v={v} />
           </td>
-          {this.renderAllCurrenciesColumns(c, v, portfolio.usdPrice, portfolio.eurPrice)}
+          <CurrenciesColumns
+            cur={c}
+            amount={v}
+            usdPrice={portfolio.usdPrice}
+            eurPrice={portfolio.eurPrice}
+          />
         </tr>
       );
     };
@@ -121,7 +127,7 @@ export class PortfolioBlock extends React.Component<Props, State> {
     return [
       <tr key='available-th'>
         <th colSpan={2} className='th-first-line'>Доступно</th>
-        {this.renderEmptyAllCurrenciesColumns()}
+        <EmptyCurrenciesColunms />
       </tr>,
       availLine("RUB"),
       availLine("USD"),
@@ -130,7 +136,12 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <th colSpan={2}>
           Всего
         </th>
-        {this.renderAllCurrenciesColumns("RUB", total.rub(), portfolio.usdPrice, portfolio.eurPrice)}
+        <CurrenciesColumns
+          cur='RUB'
+          amount={total.rub()}
+          usdPrice={portfolio.usdPrice}
+          eurPrice={portfolio.eurPrice}
+        />
       </tr>
     ];
   }
@@ -144,7 +155,12 @@ export class PortfolioBlock extends React.Component<Props, State> {
           <td colSpan={2}>
             <Cur t={c} v={v} />
           </td>
-          {this.renderAllCurrenciesColumns(c, v, portfolio.usdPrice, portfolio.eurPrice)}
+          <CurrenciesColumns
+            cur={c}
+            amount={v}
+            usdPrice={portfolio.usdPrice}
+            eurPrice={portfolio.eurPrice}
+          />
         </tr>
       );
     };
@@ -164,26 +180,13 @@ export class PortfolioBlock extends React.Component<Props, State> {
         <th colSpan={2}>
           Всего
         </th>
-        {this.renderAllCurrenciesColumns("RUB", totalOwn.rub(), portfolio.usdPrice, portfolio.eurPrice)}
+        <CurrenciesColumns
+          cur='RUB'
+          amount={totalOwn.rub()}
+          usdPrice={portfolio.usdPrice}
+          eurPrice={portfolio.eurPrice}
+        />
       </tr>
-    ];
-  }
-
-  renderAllCurrenciesColumns (
-    cur: Currency, amount: number, usdPrice: number, eurPrice: number, color?: boolean
-  ): JSX.Element[] {
-    return [
-      <td key='total-rub' className='all-cur'><Rub v={toRub(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
-      <td key='total-usd' className='all-cur'><Usd v={toUsd(cur, amount, usdPrice, eurPrice)} color={color} /></td>,
-      <td key='total-eur' className='all-cur'><Eur v={toEur(cur, amount, usdPrice, eurPrice)} color={color} /></td>
-    ];
-  }
-
-  renderEmptyAllCurrenciesColumns (): JSX.Element[] {
-    return [
-      <td key='total-rub' className='all-cur' />,
-      <td key='total-usd' className='all-cur' />,
-      <td key='total-eur' className='all-cur' />
     ];
   }
 
