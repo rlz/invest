@@ -112,9 +112,9 @@ export class HistoryBlock extends React.Component<Props, State> {
       const added30 = totalOwnCur - totalOwnCur30;
 
       const performance = (totalCur - totalOwnCur) / totalCur;
-      const performance1 = (totalCur - totalCur1 - added1) / (totalCur1 + added1);
-      const performance7 = (totalCur - totalCur7 - added7) / (totalCur7 + added7);
-      const performance30 = (totalCur - totalCur30 - added30) / (totalCur30 + added30);
+      const performance1 = (totalCur - totalCur1 - added1) / totalCur;
+      const performance7 = (totalCur - totalCur7 - added7) / totalCur;
+      const performance30 = (totalCur - totalCur30 - added30) / totalCur;
 
       return {
         date: dayState.date.getTime(),

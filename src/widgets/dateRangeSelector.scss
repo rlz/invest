@@ -1,0 +1,58 @@
+.cDateRangeSelector {
+  .dates {
+    display: flex;
+    padding: 1rem 0;
+
+    input {
+      font-family: Roboto;
+      font-size: 1rem;
+      margin: 0 1rem 0 0.5rem;
+      padding: 0.5rem;
+    }
+  }
+
+  .range-chart {
+    position: relative;
+
+    $height: 3rem;
+
+    .rc-slider {
+      height: $height;
+      position: relative;
+
+      .rc-slider-rail {
+        position: absolute;
+        height: $height;
+        width: 100%;
+        box-sizing: border-box;
+        border: solid #454545 1px;
+      }
+
+      .rc-slider-track-1 {
+        position: absolute;
+        height: $height;
+        background-color: #00000015;
+      }
+
+      .rc-slider-handle-1,
+      .rc-slider-handle-2 {
+        position: absolute;
+        height: $height;
+        width: 0.5rem;
+        background-color: #000000;
+        cursor: grab;
+
+        &:active {
+          cursor: grabbing;
+        }
+      }
+    }
+
+    .chart {
+      position: absolute;
+      top: 0;
+      height: $height;
+      width: 100%;
+    }
+  }
+}
