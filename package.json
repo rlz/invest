@@ -1,6 +1,11 @@
 {
   "name": "tinv-pwa",
   "version": "0.1.0",
+  "author": {
+    "name": "Dmitry Maslennikov",
+    "email": "maslennikovdm@gmail.com"
+  },
+  "license": "LGPL-3.0-only",
   "private": true,
   "homepage": "/invest/",
   "dependencies": {
