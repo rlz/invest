@@ -1,7 +1,42 @@
+@mixin center {
+  margin: 2rem auto 0 auto;
+  width: 60%;
+}
+
 .bLoginForm {
+  .description {
+    @include center;
+  }
+
+  .disclaimer {
+    @include center;
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    background-color: #ffd6d6;
+
+    h1 {
+      font-size: 1.5rem;
+      font-family: Roboto;
+      font-weight: bold;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  p {
+    margin: 0.3rem 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   form {
-    margin: 10rem auto;
-    width: 60%;
+    @include center;
     display: flex;
     flex-direction: column;
 
