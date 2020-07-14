@@ -1,54 +1,54 @@
 {
-  "name": "tinv-pwa",
-  "version": "0.1.0",
-  "author": {
-    "name": "Dmitry Maslennikov",
-    "email": "maslennikovdm@gmail.com"
-  },
-  "license": "LGPL-3.0-only",
-  "private": true,
-  "homepage": "/invest/",
-  "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.28",
-    "@fortawesome/free-solid-svg-icons": "^5.13.0",
-    "@fortawesome/react-fontawesome": "^0.1.9",
-    "deep-copy-ts": "^0.2.2",
-    "luxon": "^1.24.1",
-    "rc-slider": "^9.2.4",
-    "react": "^16.13.1",
-    "react-datepicker": "^2.15.0",
-    "react-dom": "^16.13.1",
-    "uplot": "^1.0.8"
-  },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^5.7.0",
-    "@types/jest": "^25.2.1",
-    "@types/luxon": "^1.24.0",
-    "@types/rc-slider": "^8.6.5",
-    "@types/react": "^16.9.34",
-    "@types/react-datepicker": "^2.11.0",
-    "@types/react-dom": "^16.9.7",
-    "eslint-config-standard-react": "9.2.0",
-    "node-sass": "^4.14.1",
-    "react-scripts": "^3.4.1",
-    "typescript": "^3.8.3"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build && rm -rf docs && mv build docs",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
+    "name": "tinv-pwa",
+    "version": "0.1.0",
+    "author": {
+        "name": "Dmitry Maslennikov",
+        "email": "maslennikovdm@gmail.com"
+    },
+    "license": "LGPL-3.0-only",
+    "private": true,
+    "homepage": "/invest/",
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^1.2.29",
+        "@fortawesome/free-solid-svg-icons": "^5.13.1",
+        "@fortawesome/react-fontawesome": "^0.1.11",
+        "deep-copy-ts": "^0.2.2",
+        "luxon": "^1.24.1",
+        "rc-slider": "9.2.4",
+        "react": "^16.13.1",
+        "react-datepicker": "^3.1.3",
+        "react-dom": "^16.13.1",
+        "uplot": "^1.0.11"
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "^5.11.0",
+        "@types/jest": "^26.0.4",
+        "@types/luxon": "^1.24.1",
+        "@types/rc-slider": "^8.6.6",
+        "@types/react": "^16.9.43",
+        "@types/react-datepicker": "^3.0.2",
+        "@types/react-dom": "^16.9.8",
+        "eslint-config-standard-react": "9.2.0",
+        "node-sass": "^4.14.1",
+        "react-scripts": "^3.4.1",
+        "typescript": "^3.9.6"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build && rm -rf docs && mv build docs",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
 }
